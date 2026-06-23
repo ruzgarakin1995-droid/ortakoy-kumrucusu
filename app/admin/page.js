@@ -1359,6 +1359,10 @@ function SettingsTab({ settings, reload }) {
             <div style={{ marginBottom: 6, fontSize: 13, color: colors.textMuted }}><i className="fa-solid fa-motorcycle" style={{color: '#ff7c00'}}></i> Migros Yemek Linki</div>
             <input type="text" className="admin-input" value={form.deliveryLinks?.migros || ''} onChange={e => setForm({...form, deliveryLinks: {...form.deliveryLinks, migros: e.target.value}})} placeholder="https://..." />
           </label>
+          <label style={{ display: 'block', marginBottom: 16 }}>
+            <div style={{ marginBottom: 6, fontSize: 13, color: colors.textMuted }}><i className="fa-solid fa-motorcycle" style={{color: '#F27A1A'}}></i> Trendyol Go Linki</div>
+            <input type="text" className="admin-input" value={form.deliveryLinks?.trendyolGo || ''} onChange={e => setForm({...form, deliveryLinks: {...form.deliveryLinks, trendyolGo: e.target.value}})} placeholder="https://..." />
+          </label>
 
           <h3 style={{ fontSize: 16, color: colors.gold, marginTop: 32, marginBottom: 16, borderBottom: '1px solid ' + colors.border, paddingBottom: 8 }}>İletişim & Sosyal Medya</h3>
           

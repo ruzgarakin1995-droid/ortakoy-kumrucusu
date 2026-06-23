@@ -675,6 +675,16 @@ export default function Home() {
             ) : (
               <div style={{ textAlign: 'center', color: '#5d3ebc', fontSize: '24px', fontWeight: 800 }}><i className="fa-solid fa-motorcycle" style={{ marginRight: 8 }}></i> Getir Yemek</div>
             )}
+            
+            <div style={{ height: '1px', background: 'var(--glass-border)' }}></div>
+            
+            {settings?.deliveryLinks?.trendyolGo && settings.deliveryLinks.trendyolGo !== '#' ? (
+              <a href={settings.deliveryLinks.trendyolGo} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+                <div style={{ textAlign: 'center', color: '#F27A1A', fontSize: '24px', fontWeight: 800 }}><i className="fa-solid fa-motorcycle" style={{ marginRight: 8 }}></i> Trendyol Go</div>
+              </a>
+            ) : (
+              <div style={{ textAlign: 'center', color: '#F27A1A', fontSize: '24px', fontWeight: 800 }}><i className="fa-solid fa-motorcycle" style={{ marginRight: 8 }}></i> Trendyol Go</div>
+            )}
           </div>
 
           {/* MAP */}
