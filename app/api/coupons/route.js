@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { getCoupons, setCoupons, validateSession } from '../../../lib/store';
 

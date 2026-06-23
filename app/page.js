@@ -100,7 +100,7 @@ export default function Home() {
   const navContainerRef = useRef(null);
   
   useEffect(() => {
-    fetch('/api/data')
+    fetch('/api/data?t=' + new Date().getTime(), { cache: 'no-store' })
       .then(res => res.json())
       .then(d => {
         if(d.banners) setData(d);
