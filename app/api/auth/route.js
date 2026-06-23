@@ -21,11 +21,11 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Geçersiz şifre' }, { status: 401 });
     }
     
-    // Generate session token
-    const token = crypto.randomUUID() + '-' + Date.now();
-    await createSession(token);
+    // Generate static token for serverless compatibility
+    const expectedToken = 'static-admin-token-' + (process.env.ADMIN_PASSWORD || 'Burak.baser0123');
+    await createSession(expectedToken);
     
-    return NextResponse.json({ success: true, token });
+    return NextResponse.json({ success: true, token: expectedToken });
   } catch (error) {
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });
   }
