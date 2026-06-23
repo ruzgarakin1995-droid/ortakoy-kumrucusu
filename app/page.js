@@ -396,7 +396,7 @@ export default function Home() {
                 if (index !== currentSlide) setCurrentSlide(index);
               }}
             >
-              {data.banners.map(banner => (
+              {data.banners.map((banner, i) => (
                 <div key={banner.id} className="banner-card">
                   <div className="item-badges">
                   {banner.badge && <span className="tag-badge tag-pop" style={{ fontSize: '12px', padding: '6px 12px' }}><i className="fa-solid fa-star"></i> {banner.badge}</span>}
@@ -466,13 +466,22 @@ export default function Home() {
         )}
 
         {/* MENU CATEGORIES */}
-        {data.categories.map(cat => (
+        {data.categories.map(cat => {
+          const filteredItems = cat.items.filter(item => 
+            !searchQuery || 
+            item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()))
+          );
+          
+          if (searchQuery && filteredItems.length === 0) return null;
+
+          return (
           <section key={cat.id} id={cat.id} className="menu-section">
             <h2 className="section-title">
               {cat.icon && <i className={cat.icon}></i>} {cat.emoji} {cat.title}
             </h2>
             
-            {cat.items.map(item => (
+            {filteredItems.map(item => (
               item.isHighlight ? (
                 <div key={item.id} className="card-highlight">
                   <div className="item-badges">
@@ -517,7 +526,8 @@ export default function Home() {
               )
             ))}
           </section>
-        ))}
+        );
+        })}
 
         {/* SOSYAL AĞLARIMIZ */}
         <div style={{ marginTop: '30px', marginBottom: '24px' }}>
