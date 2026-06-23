@@ -47,6 +47,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [data, trackingOrder]);
 
+  const [searchQuery, setSearchQuery] = useState('');
   // Checkout Multi-Step Logic
   const [checkoutStep, setCheckoutStep] = useState(1); // 1: Cart Items, 2: Address Form
   const [checkoutError, setCheckoutError] = useState('');
@@ -356,13 +357,7 @@ export default function Home() {
       <section className="search-filter-section">
         <div className="search-bar">
           <i className="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Ürün ara..." onChange={(e) => {
-             const q = e.target.value.toLowerCase();
-             document.querySelectorAll('.list-item, .card-highlight, .featured-card').forEach(item => {
-               if(item.textContent.toLowerCase().includes(q)) item.style.display = '';
-               else item.style.display = 'none';
-             });
-          }}/>
+          <input type="text" placeholder="Ürün ara..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
         </div>
       </section>
 
@@ -391,7 +386,7 @@ export default function Home() {
       <main className="container">
         
         {/* SLIDER BANNERS */}
-        {data.banners.length > 0 && (
+        {!searchQuery && data.banners.length > 0 && (
           <>
             <div 
               className="banner-slider" 
@@ -444,7 +439,7 @@ export default function Home() {
       )}
 
         {/* FEATURED ITEMS (SÜPER LEZZETLER) */}
-        {data.featured.length > 0 && (
+        {!searchQuery && data.featured.length > 0 && (
           <div className="featured-grid">
             {data.featured.map(item => (
               <div key={item.id} className="featured-card">
