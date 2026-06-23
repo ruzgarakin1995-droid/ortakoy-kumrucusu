@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ortaköy Kumrucusu | Dijital Menü</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Hero / Header Section -->
+    <header class="hero">
+        <div class="container hero-content" style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid var(--primary-color); box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                <img src="ortakoy-logo.png" alt="Ortaköy Kumrucusu Logo" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div>
+                <h2 class="hero-subtitle" style="margin-bottom: 4px;">Premium Fast Food</h2>
+                <h1 class="hero-title" style="font-size: 24px;">Ortaköy Kumrucusu</h1>
+            </div>
+        </div>
+        <div class="container hero-info" style="margin-top: 16px;">
+            <span class="info-badge rating"><i class="fa-solid fa-star"></i> 5.0 (60 Yorum)</span>
+            <span class="info-badge"><i class="fa-solid fa-bag-shopping"></i> Gel-al</span>
+            <span class="info-badge"><i class="fa-solid fa-motorcycle"></i> Adrese Teslim</span>
+        </div>
+    </header>
+
+    <!-- Search & Filters -->
+    <section class="search-filter-section">
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Ürün ara...">
+        </div>
+    </section>
+
+    <!-- Sticky Navigation -->
+    <nav class="sticky-nav">
+        <div class="nav-container">
+            <a href="#kampanyali" class="nav-item active nav-pulse">🔥 Kampanyalar</a>
+            <a href="#durumler" class="nav-item">Dürümler</a>
+            <a href="#porsiyonlar" class="nav-item">Porsiyonlar</a>
+            <a href="#tostlar" class="nav-item">Tostlar</a>
+            <a href="#kumpirler" class="nav-item">Kumpirler</a>
+            <a href="#kumrular" class="nav-item">İzmir Kumru</a>
+            <a href="#burgerler" class="nav-item">Burgerler</a>
+            <a href="#ekmek-arasi" class="nav-item">Ekmek Arası</a>
+            <a href="#tatlilar" class="nav-item">Tatlılar</a>
+            <a href="#icecekler" class="nav-item">İçecekler</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        
+        <!-- Banner Component -->
+        
+        <div class="slider-container">
+        <div class="banner-slider" id="mainBannerSlider">
+            <div class="banner-card">
+                <div class="item-badges">
+                    <span class="tag-badge tag-pop" style="font-size:12px; padding:6px 12px;"><i class="fa-solid fa-star"></i> Popüler</span>
+                    
+                </div>
+                <div class="banner-img-wrapper">
+                    <img src="images/kumpir_kola.png" alt="👨‍🍳 Şefin Elinden" class="banner-img">
+                </div>
+                <div class="banner-content">
+                    <h2 class="banner-title">👨‍🍳 <span class="shimmer-heading">Şefin Elinden</span></h2>
+                    <p class="banner-desc">Karışık Kumpir ve Meşrubat. Dev fırın patates içerisinde bol kaşar, tereyağı ve dilediğin taze mezelerle hazırlanan eşsiz lezzet!</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    <div class="banner-footer">
+                        <span class="banner-price">420₺</span>
+                        <button class="btn-large">Siparişe Ekle</button>
+                    </div>
+                </div>
+            </div>
+            <div class="banner-card">
+                <div class="item-badges">
+                    <span class="tag-badge tag-pop" style="font-size:12px; padding:6px 12px;"><i class="fa-solid fa-star"></i> Popüler</span>
+                    
+                </div>
+                <div class="banner-img-wrapper">
+                    <img src="images/tatli_cay.png" alt="🍰 Tatlı Şöleni" class="banner-img">
+                </div>
+                <div class="banner-content">
+                    <h2 class="banner-title">🍰 <span class="shimmer-heading">Tatlı Şöleni</span></h2>
+                    <p class="banner-desc">Kasede Waffle ve Çay. Bol çikolata sosu ve taptaze meyvelerle harmanlanan kase waffle keyfi, yanında sıcacık tavşan kanı çay ile.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div>
+                    <div class="banner-footer">
+                        <span class="banner-price">360₺</span>
+                        <button class="btn-large">Siparişe Ekle</button>
+                    </div>
+                </div>
+            </div>
+            <div class="banner-card">
+                <div class="item-badges">
+                    <span class="tag-badge tag-pop" style="font-size:12px; padding:6px 12px;"><i class="fa-solid fa-star"></i> Popüler</span>
+                    
+                </div>
+                <div class="banner-img-wrapper">
+                    <img src="images/gorali_kola.png" alt="🌙 Gecelerin Vazgeçilmezi" class="banner-img">
+                </div>
+                <div class="banner-content">
+                    <h2 class="banner-title">🌙 <span class="shimmer-heading">Gecelerin Vazgeçilmezi</span></h2>
+                    <p class="banner-desc">Goralı Kumru ve Meşrubat. Özel sosis, ev yapımı rus salatası ve kornişon turşunun yumuşacık sandviç ekmeğiyle buluştuğu doyurucu lezzet.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    <div class="banner-footer">
+                        <span class="banner-price">340₺</span>
+                        <button class="btn-large">Siparişe Ekle</button>
+                    </div>
+                </div>
+            </div>
+            <div class="banner-card">
+                <div class="item-badges">
+                    <span class="tag-badge tag-pop" style="font-size:12px; padding:6px 12px;"><i class="fa-solid fa-star"></i> Popüler</span>
+                    
+                </div>
+                <div class="banner-img-wrapper">
+                    <img src="images/tost_cay.png" alt="☀️ Sabahın Güneşi" class="banner-img">
+                </div>
+                <div class="banner-content">
+                    <h2 class="banner-title">☀️ <span class="shimmer-heading">Sabahın Güneşi</span></h2>
+                    <p class="banner-desc">Ayvalık Tostu ve Çay. Bol malzemeli orijinal Ayvalık tostu, yanında ince belli bardakta taze demlenmiş çay.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                    </div>
+                    <div class="banner-footer">
+                        <span class="banner-price">290₺</span>
+                        <button class="btn-large">Siparişe Ekle</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slider-dots" id="bannerDots">
+            <div class="slider-dot active" data-index="0"></div>
+            <div class="slider-dot" data-index="1"></div>
+            <div class="slider-dot" data-index="2"></div>
+            <div class="slider-dot" data-index="3"></div>
+        </div>
+    </div>
+
+    
+    <!-- Featured Grid -->
+    <div class="featured-grid">
+        <div class="featured-card">
+            <div class="featured-img-wrapper">
+                <img src="images/kumru_menu.png" alt="⭐ Efsane Kumru Menü" onerror="this.src='images/kumru.png'">
+                <span class="tag-badge tag-new"><i class="fa-solid fa-star"></i> SÜPER LEZZET</span>
+            </div>
+            <div class="featured-content">
+                <h3>⭐ Efsane Kumru Menü</h3>
+                <p>1x Orijinal İzmir Kumru (Sucuk, salam, sosis, kaşar peyniri, domates) + Patates Tava (150 g) + İçecek (Kutu Kola).</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                <div class="featured-footer">
+                    <span class="price">330₺</span>
+                    <button class="btn-add-large">Siparişe Ekle</button>
+                </div>
+            </div>
+        </div>
+        <div class="featured-card">
+            <div class="featured-img-wrapper">
+                <img src="images/kumpir.png" alt="⭐ Karışık Kumpir Şöleni">
+                <span class="tag-badge tag-new"><i class="fa-solid fa-star"></i> SÜPER LEZZET</span>
+            </div>
+            <div class="featured-content">
+                <h3>⭐ Karışık Kumpir Şöleni</h3>
+                <p>Dev fırın patates içerisinde bol kaşar, tereyağı ve dilediğin 7 çeşit meze ile unutulmaz bir lezzet şöleni.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                <div class="featured-footer">
+                    <span class="price">350₺</span>
+                    <button class="btn-add-large">Siparişe Ekle</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section id="kampanyali" class="menu-section">
+            <h2 class="section-title"><i class="fa-solid fa-fire"></i> Kampanyalı Menüler</h2>
+            <div class="card-highlight">
+                <div class="item-badges">
+                    <span class="tag-badge tag-pop"><i class="fa-solid fa-star"></i> Popüler</span>
+                </div>
+                <div class="card-img-wrapper">
+                    <img src="images/kumpir_kola.png" alt="👨‍🍳 Şefin Elinden" class="card-img">
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">👨‍🍳 Şefin Elinden</h3>
+                    <p class="item-ingredients">Karışık Kumpir ve Meşrubat. Dev fırın patates içerisinde bol kaşar, tereyağı ve dilediğin taze mezelerle hazırlanan eşsiz lezzet!</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    <div class="card-footer" style="margin-top: 12px;">
+                        <span class="price">420 ₺</span>
+                        <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-highlight">
+                <div class="item-badges">
+                    <span class="tag-badge tag-pop"><i class="fa-solid fa-star"></i> Popüler</span>
+                </div>
+                <div class="card-img-wrapper">
+                    <img src="images/tatli_cay.png" alt="🍰 Tatlı Şöleni" class="card-img">
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">🍰 Tatlı Şöleni</h3>
+                    <p class="item-ingredients">Kasede Waffle ve Çay. Bol çikolata sosu ve taptaze meyvelerle harmanlanan kase waffle keyfi, yanında sıcacık tavşan kanı çay ile.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div>
+                    <div class="card-footer" style="margin-top: 12px;">
+                        <span class="price">360 ₺</span>
+                        <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-highlight">
+                <div class="item-badges">
+                    <span class="tag-badge tag-pop"><i class="fa-solid fa-star"></i> Popüler</span>
+                </div>
+                <div class="card-img-wrapper">
+                    <img src="images/gorali_kola.png" alt="🌙 Gecelerin Vazgeçilmezi" class="card-img">
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">🌙 Gecelerin Vazgeçilmezi</h3>
+                    <p class="item-ingredients">Goralı Kumru ve Meşrubat. Özel sosis, ev yapımı rus salatası ve kornişon turşunun yumuşacık sandviç ekmeğiyle buluştuğu doyurucu lezzet.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    <div class="card-footer" style="margin-top: 12px;">
+                        <span class="price">340 ₺</span>
+                        <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-highlight">
+                <div class="item-badges">
+                    <span class="tag-badge tag-pop"><i class="fa-solid fa-star"></i> Popüler</span>
+                </div>
+                <div class="card-img-wrapper">
+                    <img src="images/tost_cay.png" alt="☀️ Sabahın Güneşi" class="card-img">
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">☀️ Sabahın Güneşi</h3>
+                    <p class="item-ingredients">Ayvalık Tostu ve Çay. Bol malzemeli orijinal Ayvalık tostu, yanında ince belli bardakta taze demlenmiş çay.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    <div class="card-footer" style="margin-top: 12px;">
+                        <span class="price">290 ₺</span>
+                        <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/kumru.png" alt="İzmir Kumru Menü (Ayran)"></div>
+                <div class="list-item-content">
+                    <div class="list-item-info">
+                        <h3>İzmir Kumru Menü (Ayran)</h3>
+                        <p class="item-ingredients">İzmir Kumru + Patates Tava + Ayran</p>
+                        
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div>
+                    </div>
+                    <div class="list-item-bottom">
+                        <div class="list-item-price">300 ₺</div>
+                        <button class="btn-add-small"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/tost.png" alt="Ayvalık Tostu Menü (Ayran)"></div>
+                <div class="list-item-content">
+                    <div class="list-item-info">
+                        <h3>Ayvalık Tostu Menü (Ayran)</h3>
+                        <p class="item-ingredients">Ayvalık Tostu + Patates Tava + Ayran</p>
+                        
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div>
+                    </div>
+                    <div class="list-item-bottom">
+                        <div class="list-item-price">300 ₺</div>
+                        <button class="btn-add-small"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/burger.png" alt="Hamburger Menü (Ayran)"></div>
+                <div class="list-item-content">
+                    <div class="list-item-info">
+                        <h3>Hamburger Menü (Ayran)</h3>
+                        <p class="item-ingredients">Hamburger + Patates Tava + Ayran</p>
+                        
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div>
+                    </div>
+                    <div class="list-item-bottom">
+                        <div class="list-item-price">300 ₺</div>
+                        <button class="btn-add-small"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/durum.png" alt="Ekmek Arası İncik Menü (Ayran)"></div>
+                <div class="list-item-content">
+                    <div class="list-item-info">
+                        <h3>Ekmek Arası İncik Menü (Ayran)</h3>
+                        <p class="item-ingredients">Ekmek Arası İncik + Patates Tava + Ayran</p>
+                        
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div>
+                    </div>
+                    <div class="list-item-bottom">
+                        <div class="list-item-price">290 ₺</div>
+                        <button class="btn-add-small"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/durum.png" alt="Dürüm İncik Menü (Ayran)"></div>
+                <div class="list-item-content">
+                    <div class="list-item-info">
+                        <h3>Dürüm İncik Menü (Ayran)</h3>
+                        <p class="item-ingredients">Dürüm İncik + Patates Tava + Ayran</p>
+                        
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div>
+                    </div>
+                    <div class="list-item-bottom">
+                        <div class="list-item-price">300 ₺</div>
+                        <button class="btn-add-small"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            
+        </section>
+
+        <!-- 5. KUMPİRLER -->
+        <section id="kumpirler" class="menu-section">
+            <h2 class="section-title">🥔 Kumpirler</h2>
+            
+            
+            <div class="category-featured">
+                <div class="item-badges"><span class="tag-badge tag-pop"><i class="fa-solid fa-star"></i> Popüler</span></div>
+                <div class="category-img-wrapper">
+                    <img src="images/kumpir.png" alt="Karışık Kumpir" class="category-img">
+                </div>
+                <div class="category-content">
+                    <h3 class="category-title">Karışık Kumpir</h3>
+                    <p class="item-ingredients">Büyük boy fırın patates (400 g), tereyağı, bol kaşar, sosis, salam, amerikan salatası, zeytin, mısır, kornişon.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    <div class="category-footer">
+                        <span class="price">350 ₺</span>
+                        <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/kumpir.png" alt="Köfteli Kumpir"></div>
+                <div class="list-item-content"><div class="list-item-info"><h3>Köfteli Kumpir</h3><p class="item-ingredients">Büyük boy patates, tereyağı, kaşar, mini kasap köfteler (150 g), domates sos, mısır.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div></div><div class="list-item-bottom"><div class="list-item-price">450 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div>
+            </div>
+
+            <div class="list-item">
+                <div class="item-badges"><span class="tag-badge tag-hot"><i class="fa-solid fa-pepper-hot"></i> Acılı</span></div>
+                <div class="list-item-thumb"><img src="images/kumpir.png" alt="Meksikan Kumpir"></div>
+                <div class="list-item-content"><div class="list-item-info"><h3>Meksikan Kumpir</h3><p class="item-ingredients">Büyük boy patates, tereyağı, kaşar, jalepeno biber, meksika fasulyesi, acılı kıyma sos (120 g), mısır.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div></div><div class="list-item-bottom"><div class="list-item-price">390 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div>
+            </div>
+
+            <div class="list-item">
+                <div class="item-badges"><span class="tag-badge tag-veg"><i class="fa-solid fa-leaf"></i> Vejetaryen</span></div>
+                <div class="list-item-thumb"><img src="images/kumpir.png" alt="Sade Kumpir"></div>
+                <div class="list-item-content"><div class="list-item-info"><h3>Sade Kumpir</h3><p class="item-ingredients">Büyük boy fırın patates (400 g), tereyağı (30 g), bol kaşar peyniri (80 g).</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div></div><div class="list-item-bottom"><div class="list-item-price">280 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div>
+            </div>
+        </section>
+
+        
+        <!-- DÜRÜMLER -->
+        <section id="durumler" class="menu-section">
+            <h2 class="section-title"><i class="fa-solid fa-scroll"></i> Dürümler</h2>
+            
+            
+            <div class="category-featured">
+                
+                <div class="category-img-wrapper">
+                    <img src="images/durum.png" alt="Adana Dürüm" class="category-img">
+                </div>
+                <div class="category-content">
+                    <h3 class="category-title">Adana Dürüm</h3>
+                    <p class="item-ingredients">Özel lavaş ekmeğine sarılı nefis Adana kebap, soğan, maydanoz ve domates.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    <div class="category-footer">
+                        <span class="price">290 ₺</span>
+                        <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/durum.png" alt="Tavuk İncik Dürüm"></div>
+                <div class="list-item-content">
+                    <div class="list-item-info">
+                        <h3>Tavuk İncik Dürüm</h3>
+                        <p class="item-ingredients">Özel lavaş ekmeğine sarılı ızgara tavuk incik, soğan ve yeşillikler.</p>
+                        
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    </div>
+                    <div class="list-item-bottom">
+                        <div class="list-item-price">250 ₺</div>
+                        <button class="btn-add-small"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TOSTLAR -->
+        <section id="tostlar" class="menu-section">
+            <h2 class="section-title"><i class="fa-solid fa-bread-slice"></i> Tostlar</h2>
+            
+            
+            <div class="category-featured">
+                
+                <div class="category-img-wrapper">
+                    <img src="images/tost.png" alt="Ayvalık Tostu" class="category-img">
+                </div>
+                <div class="category-content">
+                    <h3 class="category-title">Ayvalık Tostu</h3>
+                    <p class="item-ingredients">Orijinal Ayvalık tostu ekmeği, kaşar, sosis, sucuk, salam, amerikan salatası, turşu.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    <div class="category-footer">
+                        <span class="price">240 ₺</span>
+                        <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/tost.png" alt="Sucuklu Kaşarlı Tost"></div>
+                <div class="list-item-content">
+                    <div class="list-item-info">
+                        <h3>Sucuklu Kaşarlı Tost</h3>
+                        <p class="item-ingredients">Tost ekmeği, bol kaşar peyniri ve özel sucuk.</p>
+                        
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    </div>
+                    <div class="list-item-bottom">
+                        <div class="list-item-price">210 ₺</div>
+                        <button class="btn-add-small"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/tost.png" alt="Kaşarlı Tost"></div>
+                <div class="list-item-content">
+                    <div class="list-item-info">
+                        <h3>Kaşarlı Tost</h3>
+                        <p class="item-ingredients">Tost ekmeği ve bol eritme kaşar peyniri.</p>
+                        
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div>
+                    </div>
+                    <div class="list-item-bottom">
+                        <div class="list-item-price">190 ₺</div>
+                        <button class="btn-add-small"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/tost.png" alt="Sucuklu Tost"></div>
+                <div class="list-item-content">
+                    <div class="list-item-info">
+                        <h3>Sucuklu Tost</h3>
+                        <p class="item-ingredients">Tost ekmeği ve özel sucuk dilimleri.</p>
+                        
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    </div>
+                    <div class="list-item-bottom">
+                        <div class="list-item-price">190 ₺</div>
+                        <button class="btn-add-small"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/tost.png" alt="Ege Tostu"></div>
+                <div class="list-item-content">
+                    <div class="list-item-info">
+                        <h3>Ege Tostu</h3>
+                        <p class="item-ingredients">Özel Ege yöresi lezzetleriyle hazırlanan doyurucu tost.</p>
+                        
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    </div>
+                    <div class="list-item-bottom">
+                        <div class="list-item-price">290 ₺</div>
+                        <button class="btn-add-small"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PORSİYONLAR -->
+        <section id="porsiyonlar" class="menu-section">
+            <h2 class="section-title"><i class="fa-solid fa-plate-wheat"></i> Porsiyonlar</h2>
+            
+            
+            <div class="category-featured">
+                
+                <div class="category-img-wrapper">
+                    <img src="images/porsiyon.png" alt="Kasap Köfte Porsiyon" class="category-img">
+                </div>
+                <div class="category-content">
+                    <h3 class="category-title">Kasap Köfte Porsiyon</h3>
+                    <p class="item-ingredients">Özel kasap köfte, yanında patates kızartması ve yeşillik.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    <div class="category-footer">
+                        <span class="price">380 ₺</span>
+                        <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/porsiyon.png" alt="Tavuk İncik Porsiyon"></div>
+                <div class="list-item-content">
+                    <div class="list-item-info">
+                        <h3>Tavuk İncik Porsiyon</h3>
+                        <p class="item-ingredients">Izgara tavuk incik, patates kızartması ve yeşillik ile.</p>
+                        
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    </div>
+                    <div class="list-item-bottom">
+                        <div class="list-item-price">350 ₺</div>
+                        <button class="btn-add-small"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. İZMİR KUMRU -->
+        <section id="kumrular" class="menu-section">
+            <h2 class="section-title"><i class="fa-solid fa-hotdog"></i> İzmir Kumru</h2>
+            
+            
+            <div class="category-featured">
+                
+                <div class="category-img-wrapper">
+                    <img src="images/kumru.png" alt="Kumru" class="category-img">
+                </div>
+                <div class="category-content">
+                    <h3 class="category-title">Orijinal İzmir Kumru</h3>
+                    <p class="item-ingredients">Özel kumru ekmeği (110 g), salam, sosis, sucuk, Sayas peyniri (eritme kaşar), domates.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    <div class="category-footer">
+                        <span class="price">240 ₺</span>
+                        <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/kumru.png" alt="Gorali"></div>
+                <div class="list-item-content"><div class="list-item-info"><h3>Goralı Kumru</h3><p class="item-ingredients">Özel kumru ekmeği, sosis, salam, özel Goralı sosu, turşu, mayonez.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div></div><div class="list-item-bottom"><div class="list-item-price">270 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div>
+            </div>
+        </section>
+
+        <!-- 7. BURGERLER -->
+        <section id="burgerler" class="menu-section">
+            <h2 class="section-title"><i class="fa-solid fa-burger"></i> Burgerler</h2>
+            
+            
+            <div class="category-featured">
+                <div class="item-badges"><span class="tag-badge tag-pop"><i class="fa-solid fa-star"></i> Popüler</span></div>
+                <div class="category-img-wrapper">
+                    <img src="images/burger.png" alt="Ortaköy Satır Burger" class="category-img">
+                </div>
+                <div class="category-content">
+                    <h3 class="category-title">Ortaköy Satır Burger</h3>
+                    <p class="item-ingredients">Özel burger ekmeği, satır kıyması köfte (150 g), karamelize soğan, cheddar peyniri, BBQ sos.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    <div class="category-footer">
+                        <span class="price">380 ₺</span>
+                        <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/burger.png" alt="Cheeseburger"></div>
+                <div class="list-item-content"><div class="list-item-info"><h3>Cheeseburger</h3><p class="item-ingredients">Burger ekmeği, burger köftesi (120 g), çift dilim cheddar peyniri, domates, marul, turşu.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div></div><div class="list-item-bottom"><div class="list-item-price">270 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/burger.png" alt="Hamburger"></div>
+                <div class="list-item-content"><div class="list-item-info"><h3>Hamburger</h3><p class="item-ingredients">Burger ekmeği, burger köftesi (120 g), domates, marul, turşu, ketçap, mayonez.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div></div><div class="list-item-bottom"><div class="list-item-price">240 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div>
+            </div>
+        </section>
+
+        <!-- 8. EKMEK ARASI & YANCILAR -->
+        <section id="ekmek-arasi" class="menu-section">
+            <h2 class="section-title"><i class="fa-solid fa-drumstick-bite"></i> Ekmek Arası & Yancılar</h2>
+            
+            
+            <div class="category-featured">
+                <div class="item-badges"><span class="tag-badge tag-veg"><i class="fa-solid fa-leaf"></i> Vejetaryen</span></div>
+                <div class="category-img-wrapper">
+                    <img src="images/ekmek_arasi.png" alt="Ekmek Arası Tavuk" class="category-img">
+                </div>
+                <div class="category-content">
+                    <h3 class="category-title">Ekmek Arası Tavuk İncik</h3>
+                    <p class="item-ingredients">Yarım ekmek, didilmiş ızgara tavuk incik (100 g), soğan, maydanoz, domates.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div>
+                    <div class="category-footer">
+                        <span class="price">230 ₺</span>
+                        <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/ekmek_arasi.png" alt="Ekmek Arası Köfte"></div>
+                <div class="list-item-content"><div class="list-item-info"><h3>Ekmek Arası Satır Köfte</h3><p class="item-ingredients">Yarım ekmek, ızgara satır köfte (120 g), domates, soğan piyazı, yeşillik.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-dana" tabindex="0" title="Et Ürünleri"><i class="fa-solid fa-cow"></i></div>
+                    </div></div><div class="list-item-bottom"><div class="list-item-price">230 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div>
+            </div>
+            <div class="list-item">
+                <div class="item-badges"><span class="tag-badge tag-veg"><i class="fa-solid fa-leaf"></i> Vejetaryen</span></div>
+                <div class="list-item-thumb"><img src="images/patates_kapta.png" alt="Patates"></div>
+                <div class="list-item-content"><div class="list-item-info"><h3>Patates Kızartması</h3><p class="item-ingredients">Çıtır patates (Küçük 150g / Büyük 250g), özel baharat karışımı, sos.</p></div><div class="list-item-bottom"><div class="list-item-price">140 ₺ / 190 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div>
+            </div>
+        </section>
+
+        <!-- 9. TATLILAR -->
+        <section id="tatlilar" class="menu-section">
+            <h2 class="section-title"><i class="fa-solid fa-ice-cream"></i> Tatlılar</h2>
+            
+            
+            <div class="category-featured">
+                
+                <div class="category-img-wrapper">
+                    <img src="images/tatli.png" alt="Waffle" class="category-img">
+                </div>
+                <div class="category-content">
+                    <h3 class="category-title">Waffle</h3>
+                    <p class="item-ingredients">Taze waffle hamuru, çikolata sosu, taze meyveler, ceviz ve fındık kırığı.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div>
+                    <div class="category-footer">
+                        <span class="price">300 ₺</span>
+                        <button class="btn-add"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/waffle_kase.png" alt="Kasede Waffle"></div>
+                <div class="list-item-content"><div class="list-item-info"><h3>Kasede Waffle</h3><p class="item-ingredients">Parçalanmış waffle hamuru, bol çikolata, meyveler, dondurma topu.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-tahil" tabindex="0" title="Tahıl / Gluten"><i class="fa-solid fa-wheat-awn"></i></div>
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div></div><div class="list-item-bottom"><div class="list-item-price">350 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div>
+            </div>
+            <div class="list-item">
+                <div class="list-item-thumb"><img src="images/waffle_bardak.png" alt="Bardakta Waffle"></div>
+                <div class="list-item-content"><div class="list-item-info"><h3>Bardakta Waffle</h3><p class="item-ingredients">Mevsimine göre supangle, magnolia veya puding çeşitleri (200 g).</p></div><div class="list-item-bottom"><div class="list-item-price">200 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div>
+            </div>
+        </section>
+
+        <!-- 10. İÇECEKLER -->
+        <section id="icecekler" class="menu-section">
+            <h2 class="section-title"><i class="fa-solid fa-mug-hot"></i> İçecekler</h2>
+            <div class="list-item"><div class="list-item-thumb"><img src="images/nescafe.png" alt="Nescafe"></div><div class="list-item-content"><div class="list-item-info"><h3>Nescafe</h3><p class="item-ingredients">Hazır kahve, sıcak su, isteğe bağlı süt.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div></div><div class="list-item-bottom"><div class="list-item-price">90 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div></div>
+            <div class="list-item"><div class="list-item-thumb"><img src="images/latte.png" alt="Latte"></div><div class="list-item-content"><div class="list-item-info"><h3>Latte</h3><p class="item-ingredients">Espresso, buharla ısıtılmış süt (200 ml).</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div></div><div class="list-item-bottom"><div class="list-item-price">120 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div></div>
+            <div class="list-item"><div class="list-item-thumb"><img src="images/americano.png" alt="Amerikano"></div><div class="list-item-content"><div class="list-item-info"><h3>Amerikano</h3><p class="item-ingredients">Espresso ve sıcak su.</p></div><div class="list-item-bottom"><div class="list-item-price">120 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div></div>
+            <div class="list-item"><div class="list-item-thumb"><img src="images/sicak_cikolata.png" alt="Sıcak Çikolata"></div><div class="list-item-content"><div class="list-item-info"><h3>Sıcak Çikolata</h3><p class="item-ingredients">Sıcak süt, yoğun çikolata tozu.</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div></div><div class="list-item-bottom"><div class="list-item-price">120 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div></div>
+            <div class="list-item"><div class="list-item-thumb"><img src="images/turk_kahvesi.png" alt="Türk Kahvesi"></div><div class="list-item-content"><div class="list-item-info"><h3>Türk Kahvesi</h3><p class="item-ingredients">Geleneksel Türk Kahvesi, lokum eşliğinde.</p></div><div class="list-item-bottom"><div class="list-item-price">90 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div></div>
+            <div class="list-item"><div class="list-item-thumb"><img src="images/cay.png" alt="Çay"></div><div class="list-item-content"><div class="list-item-info"><h3>Çay</h3><p class="item-ingredients">İnce belli bardakta taze demlenmiş Türk çayı.</p></div><div class="list-item-bottom"><div class="list-item-price">30 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div></div>
+            <div class="list-item"><div class="list-item-thumb"><img src="images/bitki_cayi.png" alt="Bitki Çayı"></div><div class="list-item-content"><div class="list-item-info"><h3>Bitki Çayı</h3><p class="item-ingredients">Yeşil çay, adaçayı, ıhlamur veya kuşburnu.</p></div><div class="list-item-bottom"><div class="list-item-price">40 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div></div>
+            <div class="list-item"><div class="list-item-thumb"><img src="images/limonata.png" alt="Limonata"></div><div class="list-item-content"><div class="list-item-info"><h3>Limonata</h3><p class="item-ingredients">Taze sıkılmış limon, şeker, nane (300 ml).</p></div><div class="list-item-bottom"><div class="list-item-price">80 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div></div>
+            <div class="list-item"><div class="list-item-thumb"><img src="images/karadut_suyu.png" alt="Karadut"></div><div class="list-item-content"><div class="list-item-info"><h3>Karadut Özü</h3><p class="item-ingredients">Doğal karadut özü suyu, buz (300 ml).</p></div><div class="list-item-bottom"><div class="list-item-price">80 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div></div>
+            <div class="list-item"><div class="list-item-thumb"><img src="images/kola.png" alt="Meşrubatlar"></div><div class="list-item-content"><div class="list-item-info"><h3>Meşrubatlar (Kola, Fanta, Sprite)</h3><p class="item-ingredients">Kutu içecek (330 ml).</p></div><div class="list-item-bottom"><div class="list-item-price">90 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div></div>
+            <div class="list-item"><div class="list-item-thumb"><img src="images/ayran.png" alt="Ayran"></div><div class="list-item-content"><div class="list-item-info"><h3>Ayran</h3><p class="item-ingredients">Kapalı Ayran (Büyük / Küçük).</p>
+                    <div class="ingredient-icons">
+                        <div class="ing-icon ing-sut" tabindex="0" title="Süt Ürünü"><i class="fa-solid fa-bottle-droplet"></i></div>
+                    </div></div><div class="list-item-bottom"><div class="list-item-price">70 ₺ / 40 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div></div>
+            <div class="list-item"><div class="list-item-thumb"><img src="images/sade_soda.png" alt="Sade Soda"></div><div class="list-item-content"><div class="list-item-info"><h3>Sade Soda</h3><p class="item-ingredients">Maden suyu (200 ml).</p></div><div class="list-item-bottom"><div class="list-item-price">50 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div></div>
+            <div class="list-item"><div class="list-item-thumb"><img src="images/churchill.png" alt="Churchill"></div><div class="list-item-content"><div class="list-item-info"><h3>Churchill</h3><p class="item-ingredients">Maden suyu, taze sıkılmış limon suyu, tuz.</p></div><div class="list-item-bottom"><div class="list-item-price">120 ₺</div><button class="btn-add-small"><i class="fa-solid fa-plus"></i></button></div></div></div>
+        </section>
+
+        <!-- Rating Card -->
+        <div class="rating-card">
+            <h3 class="rating-title">Bizi Değerlendirin!</h3>
+            <div class="stars">
+                <a href="https://www.google.com/search?q=Ortaköy+Kumrucusu+Burhaniye+Yorumlar" target="_blank"><i class="fa-solid fa-star"></i></a>
+                <a href="https://www.google.com/search?q=Ortaköy+Kumrucusu+Burhaniye+Yorumlar" target="_blank"><i class="fa-solid fa-star"></i></a>
+                <a href="https://www.google.com/search?q=Ortaköy+Kumrucusu+Burhaniye+Yorumlar" target="_blank"><i class="fa-solid fa-star"></i></a>
+                <a href="https://www.google.com/search?q=Ortaköy+Kumrucusu+Burhaniye+Yorumlar" target="_blank"><i class="fa-solid fa-star"></i></a>
+                <a href="https://www.google.com/search?q=Ortaköy+Kumrucusu+Burhaniye+Yorumlar" target="_blank"><i class="fa-solid fa-star"></i></a>
+            </div>
+            <p class="rating-subtitle">Yıldıza tıklayarak Google'da bizi puanlayın</p>
+        </div>
+
+        <!-- Working Hours (Dark Theme) -->
+        <div class="working-hours-card">
+            <div class="wh-header">
+                <div class="wh-title">
+                    <i class="fa-regular fa-clock"></i>
+                    Çalışma Saatleri
+                </div>
+                <div class="wh-badge">Şimdi açık</div>
+            </div>
+            <table class="wh-table">
+                <tr class="active"><td>Pazartesi:</td><td>10:00 - 02:00</td></tr>
+                <tr><td>Salı:</td><td>10:00 - 02:00</td></tr>
+                <tr><td>Çarşamba:</td><td>10:00 - 02:00</td></tr>
+                <tr><td>Perşembe:</td><td>10:00 - 02:00</td></tr>
+                <tr><td>Cuma:</td><td>10:00 - 02:00</td></tr>
+                <tr><td>Cumartesi:</td><td>10:00 - 02:00</td></tr>
+                <tr><td>Pazar:</td><td>11:00 - 02:00</td></tr>
+            </table>
+        </div>
+
+        <!-- Social Links -->
+        <h3 class="social-list-title">Sosyal Medya</h3>
+        <a href="https://instagram.com/ortakoykumrucusuburhaniye" target="_blank" class="social-link-item">
+            <div class="social-link-left">
+                <div class="social-icon instagram"><i class="fa-brands fa-instagram"></i></div>
+                <div class="social-info"><h4>Instagram</h4><p>Süreci yakından takip edin.</p></div>
+            </div>
+            <i class="fa-solid fa-arrow-right social-arrow"></i>
+        </a>
+        <a href="https://wa.me/905011610399" target="_blank" class="social-link-item">
+            <div class="social-link-left">
+                <div class="social-icon whatsapp"><i class="fa-brands fa-whatsapp"></i></div>
+                <div class="social-info"><h4>WhatsApp</h4><p>Hızlı sipariş ve destek.</p></div>
+            </div>
+            <i class="fa-solid fa-arrow-right social-arrow"></i>
+        </a>
+        <a href="https://www.google.com/search?q=Ortaköy+Kumrucusu+Burhaniye+Yorumlar" target="_blank" class="social-link-item">
+            <div class="social-link-left">
+                <div class="social-icon google"><i class="fa-brands fa-google"></i></div>
+                <div class="social-info"><h4>Google Yorumu Yap, %10 İndirim Kazan!</h4><p>Bizi değerlendirin.</p></div>
+            </div>
+            <i class="fa-solid fa-arrow-right social-arrow"></i>
+        </a>
+
+        <!-- Dark Contact Component at Bottom -->
+        <div class="contact-card">
+            <div class="contact-header">
+                <i class="fa-solid fa-grip"></i> İletişim
+            </div>
+            <div class="contact-row">
+                <div class="contact-icon-box"><i class="fa-solid fa-briefcase"></i></div>
+                <div class="contact-info-text">
+                    <span class="contact-label">Telefon</span>
+                    <span class="contact-value">0544 228 52 08</span>
+                </div>
+            </div>
+            <div class="contact-row">
+                <div class="contact-icon-box"><i class="fa-solid fa-mobile-screen"></i></div>
+                <div class="contact-info-text">
+                    <span class="contact-label">WhatsApp</span>
+                    <span class="contact-value">0501 161 03 99</span>
+                </div>
+            </div>
+            <div class="contact-row" style="border-bottom: none;">
+                <div class="contact-icon-box"><i class="fa-regular fa-envelope"></i></div>
+                <div class="contact-info-text">
+                    <span class="contact-label">E-posta</span>
+                    <span class="contact-value">ortakoykumrucusu_burhaniye@gmail.com</span>
+                </div>
+            </div>
+            
+            <div class="delivery-platforms">
+                <a href="https://www.yemeksepeti.com/restaurant/kis1/ortakoy-kumrucusu" target="_blank" class="delivery-logo ys">
+                    <i class="fa-solid fa-motorcycle"></i> Yemeksepeti
+                </a>
+                <a href="https://www.migros.com.tr/yemek/ortakoy-kumrucusu-burhaniye" target="_blank" class="delivery-logo migros">
+                    <i class="fa-solid fa-m"></i> Migros Yemek
+                </a>
+                <a href="https://getir.com/yemek/restoran/ortakoy-kumpircisi-burhaniye" target="_blank" class="delivery-logo getir">
+                    <i class="fa-solid fa-g"></i> Getir Yemek
+                </a>
+            </div>
+
+            <div class="map-container">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3056.223847551065!2d26.942702!3d39.529246!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14b98d1a1b1b1b1b%3A0x1b1b1b1b1b1b1b1b!2zw5bEn3JldG1lbmxlciwgTXVhbW1lciBBa3NveSBDZC4gTm86MzQsIDEwNzAwIEJ1cmhhbml5ZS9CYWzEsWtlc2ly!5e0!3m2!1str!2str!4v1700000000000!5m2!1str!2str" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+
+            <div class="map-links">
+                <a href="https://maps.google.com/?q=Öğretmenler,+Muammer+Aksoy+Cd.+No:34,+10700+Burhaniye/Balıkesir,+Türkiye" target="_blank" class="map-link-item">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Google_Maps_icon.svg" alt="Google Maps" style="width:32px; height:32px;">
+                    Google Maps
+                </a>
+                <a href="https://yandex.com/maps/?text=Öğretmenler,+Muammer+Aksoy+Cd.+No:34,+10700+Burhaniye/Balıkesir,+Türkiye" target="_blank" class="map-link-item">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Yandex_Maps_icon.svg" alt="Yandex Maps" style="width:32px; height:32px;">
+                    Yandex Maps
+                </a>
+                <a href="http://maps.apple.com/?q=Öğretmenler,+Muammer+Aksoy+Cd.+No:34,+10700+Burhaniye/Balıkesir,+Türkiye" target="_blank" class="map-link-item">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Apple_Maps_icon_%282020%29.svg" alt="Apple Maps" style="width:32px; height:32px;">
+                    Apple Maps
+                </a>
+            </div>
+        </div>
+
+    </main>
+
+    <div class="bottom-spacer"></div>
+
+    <script src="js/app.js"></script>
+    <script>
+        const d = new Date();
+        let day = d.getDay(); 
+        const rows = document.querySelectorAll('.wh-table tr');
+        rows.forEach(r => r.classList.remove('active'));
+        let tableIndex = day === 0 ? 6 : day - 1; 
+        if(rows[tableIndex]) {
+            rows[tableIndex].classList.add('active');
+        }
+        
+        
+        // Banner Slider Auto-play
+        const slider = document.getElementById('mainBannerSlider');
+        const dots = document.querySelectorAll('#bannerDots .slider-dot');
+        let currentSlide = 0;
+        let slideInterval;
+
+        function updateDots(index) {
+            dots.forEach(dot => dot.classList.remove('active'));
+            dots[index].classList.add('active');
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % dots.length;
+            const scrollLeft = slider.clientWidth * currentSlide;
+            slider.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+            updateDots(currentSlide);
+        }
+
+        if (slider && dots.length > 0) {
+            slideInterval = setInterval(nextSlide, 10000);
+            
+            // Allow manual sync of dots on manual scroll
+            slider.addEventListener('scroll', () => {
+                const index = Math.round(slider.scrollLeft / slider.clientWidth);
+                if (index !== currentSlide) {
+                    currentSlide = index;
+                    updateDots(currentSlide);
+                }
+            });
+            
+            // Reset timer on manual touch
+            slider.addEventListener('touchstart', () => {
+                clearInterval(slideInterval);
+                slideInterval = setInterval(nextSlide, 10000);
+            });
+        }
+
+        // Basic filter active toggling script
+        document.querySelectorAll('.chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+
+    <!-- Toast Notification -->
+    <div class="toast-container" id="menuToast">
+        <img src="" alt="Menu Image" class="toast-img" id="toastImg">
+        <div class="toast-content">
+            <h4>Bunu denemiş miydiniz?</h4>
+            <p id="toastText">Lezzet</p>
+        </div>
+    </div>
+
+    <!-- Floating Cart Button -->
+    <div class="floating-cart-btn" id="floatingCartBtn">
+        <div class="cart-count">1</div>
+        <div class="cart-text">Siparişi Gör</div>
+        <div class="cart-price">• 590₺</div>
+    </div>
+
+    <!-- Checkout Modal / Bottom Sheet -->
+    <div class="checkout-overlay" id="checkoutModal">
+        
+        
+        <div class="checkout-sheet single-page-compact">
+            <div class="sheet-header compact-header">
+                <h3><i class="fa-solid fa-cart-shopping"></i> Sipariş Listem</h3>
+                <i class="fa-solid fa-xmark close-sheet" id="closeCheckout"></i>
+            </div>
+            
+            <div class="sheet-body compact-body">
+                <div id="cartItemsContainer" class="compact-cart-items">
+                    <!-- Items will be dynamically inserted here -->
+                </div>
+                
+                <div class="cart-empty-state" id="cartEmptyState">
+                    <i class="fa-solid fa-basket-shopping" style="font-size: 2.5rem; color: rgba(255,255,255,0.2); margin-bottom: 10px;"></i>
+                    <p style="font-size: 14px; margin:0;">Sepetiniz boş.</p>
+                </div>
+                
+                <div class="cart-total-row compact-total" id="cartTotalRow" style="display: none;">
+                    <strong>Toplam</strong>
+                    <strong id="cartTotalPrice">0 ₺</strong>
+                </div>
+                
+                <div class="delivery-notice compact-notice" id="deliveryNotice" style="display: none;">
+                    <i class="fa-solid fa-motorcycle"></i> <span id="deliveryText">600 ₺ üzeri siparişlerde teslimat ücretsiz!</span>
+                </div>
+
+                <div class="checkout-actions compact-actions" id="checkoutActions" style="display: none;">
+                    <div class="checkout-form compact-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <input type="text" id="customerName" placeholder=" " required>
+                                <label for="customerName">İsim Soyisim</label>
+                            </div>
+                            <div class="form-group">
+                                <input type="tel" id="customerPhone" placeholder=" " required>
+                                <label for="customerPhone">Telefon</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="customerAddress" placeholder=" " required>
+                            <label for="customerAddress">Teslimat Adresi</label>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="orderNotes" placeholder=" ">
+                            <label for="orderNotes">Sipariş Notu</label>
+                        </div>
+                    </div>
+
+                    <div class="payment-methods compact-payment">
+                        <button class="payment-method active"><i class="fa-solid fa-money-bill"></i> Nakit</button>
+                        <button class="payment-method"><i class="fa-solid fa-credit-card"></i> Kredi Kartı</button>
+                    </div>
+                    
+                    <button class="btn-checkout-premium compact-btn" id="btnCompleteOrder">Siparişi Tamamla <i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Edit Item Modal -->
+    <div class="edit-item-overlay" id="editItemModal">
+        <div class="edit-item-sheet">
+            <div class="edit-header">
+                <h4>Ürün Malzemeleri</h4>
+                <i class="fa-solid fa-xmark close-edit" id="closeEditModal"></i>
+            </div>
+            <div class="edit-body" id="editIngredientsList">
+                <!-- Ingredients will be inserted here dynamically -->
+            </div>
+            <div class="edit-footer">
+                <button class="btn-checkout-premium" id="btnSaveEdit">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
