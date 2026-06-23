@@ -491,6 +491,7 @@ h1, h2, h3, h4 {
 }
 
 .list-item-thumb {
+  position: relative;
   width: 90px;
   height: 90px;
   border-radius: 8px;
@@ -821,6 +822,7 @@ h1, h2, h3, h4 {
 }
 
 .toast-img {
+  position: relative;
   width: 48px;
   height: 48px;
   border-radius: 8px;

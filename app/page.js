@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 
 const toastMessages = [
   "Bence bunu kesinlikle denemelisin!",
@@ -336,8 +337,8 @@ export default function Home() {
           </button>
         </div>
         <div className="container hero-content" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--primary-color)', boxShadow: '0 4px 15px rgba(0,0,0,0.5)' }}>
-            <img src="/ortakoy-logo.png" alt="Ortaköy Kumrucusu Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--primary-color)', boxShadow: '0 4px 15px rgba(0,0,0,0.5)', position: 'relative' }}>
+            <Image src="/ortakoy-logo.png" alt="Ortaköy Kumrucusu Logo" fill style={{ objectFit: 'cover' }} sizes="80px" priority />
           </div>
           <div>
             <h2 className="hero-subtitle" style={{ marginBottom: '4px' }}>Premium Fast Food</h2>
@@ -406,7 +407,7 @@ export default function Home() {
                   {banner.badge && <span className="tag-badge tag-pop" style={{ fontSize: '12px', padding: '6px 12px' }}><i className="fa-solid fa-star"></i> {banner.badge}</span>}
                 </div>
                 <div className="banner-img-wrapper">
-                  <img src={banner.image} alt={banner.title} className="banner-img" />
+                  <Image src={banner.image} alt={banner.title} fill className="banner-img" style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 100vw, 800px" priority={i === 0} />
                 </div>
                 <div className="banner-content">
                   <h2 className="banner-title">{banner.emoji} <span className="shimmer-heading">{banner.title}</span></h2>
@@ -448,7 +449,7 @@ export default function Home() {
             {data.featured.map(item => (
               <div key={item.id} className="featured-card">
                 <div className="featured-img-wrapper">
-                  <img src={item.image} alt={item.title} />
+                  <Image src={item.image} alt={item.title} fill style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 50vw, 300px" />
                   <span className="tag-badge tag-new"><i className="fa-solid fa-star"></i> SÜPER LEZZET</span>
                 </div>
                 <div className="featured-content">
@@ -483,7 +484,7 @@ export default function Home() {
                     {item.badge && <span className="tag-badge tag-pop"><i className="fa-solid fa-star"></i> {item.badge}</span>}
                   </div>
                   <div className="card-img-wrapper">
-                    <img src={item.image} alt={item.title} className="card-img" />
+                    <Image src={item.image} alt={item.title} fill className="card-img" style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 50vw, 300px" />
                   </div>
                   <div className="card-content">
                     <h3 className="card-title">{item.emoji} {item.title}</h3>
@@ -501,7 +502,7 @@ export default function Home() {
                 </div>
               ) : (
                 <div key={item.id} className="list-item">
-                  <div className="list-item-thumb"><img src={item.image} alt={item.title} /></div>
+                  <div className="list-item-thumb"><Image src={item.image} alt={item.title} fill style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 50vw, 300px" /></div>
                   <div className="list-item-content">
                     <div className="list-item-info">
                       <h3>{item.emoji} {item.title}</h3>
@@ -1088,7 +1089,7 @@ export default function Home() {
             <div className="toast-body">
               {toast.image ? (
                 <div className="toast-img">
-                  <img src={toast.image} alt={toast.title} />
+                  <Image src={toast.image} alt={toast.title} fill style={{ objectFit: 'cover' }} sizes="70px" />
                 </div>
               ) : (
                 <div className="toast-img-placeholder"><i className="fa-solid fa-utensils"></i></div>
