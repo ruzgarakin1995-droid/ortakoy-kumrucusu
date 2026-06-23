@@ -198,6 +198,7 @@ export default function Home() {
       
       setTrackingOrder(order);
       setIsTrackingOpen(true);
+      if (typeof window !== 'undefined') localStorage.setItem('trackingOrderId', order.id);
       
       // Start polling
       pollOrderStatus(order.id);
@@ -218,6 +219,7 @@ export default function Home() {
             setTimeout(() => {
               setTrackingOrder(null);
               setIsTrackingOpen(false);
+              if (typeof window !== 'undefined') localStorage.removeItem('trackingOrderId');
             }, 35 * 60 * 1000); // 35 dakika sonra butonu ve ekranı gizle
           }
         }
@@ -226,6 +228,29 @@ export default function Home() {
       }
     }, 10000);
   };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedOrderId = localStorage.getItem('trackingOrderId');
+    if (savedOrderId && !trackingOrder) {
+      fetch(`/api/orders?track=${savedOrderId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.id) {
+            setTrackingOrder(data);
+            if (data.status !== 'delivered') {
+              pollOrderStatus(savedOrderId);
+            } else {
+              localStorage.removeItem('trackingOrderId');
+            }
+          } else {
+            localStorage.removeItem('trackingOrderId');
+          }
+        })
+        .catch(console.error);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const getTrackingFabData = () => {
     if (!trackingOrder) return null;
