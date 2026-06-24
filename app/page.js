@@ -1126,14 +1126,14 @@ export default function Home() {
                 <div className="step-icon"><i className="fa-solid fa-check"></i></div>
                 <div className="step-info">
                   <div className="step-title">Siparişiniz Alındı</div>
-                  <div className="step-time">Anında</div>
+                  <div className="step-time" style={{ fontSize: 13, lineHeight: 1.4 }}>Lezzetli siparişiniz ışık hızında bizlere ulaştı.</div>
                 </div>
               </div>
               <div className={`tracking-step ${getStepClass('preparing')}`}>
                 <div className="step-icon">👨‍🍳</div>
                 <div className="step-info">
                   <div className="step-title">Hazırlanıyor</div>
-                  <div className="step-time" style={{ fontSize: 13, lineHeight: 1.4 }}>Siparişiniz en lezzetli şekilde özel şef ustalarımız sizler için hazırlıyorlar.</div>
+                  <div className="step-time" style={{ fontSize: 13, lineHeight: 1.4 }}>Siparişiniz en lezzetli şekilde özel şef ustalarımız tarafından sizler için hazırlanıyorlar.</div>
                 </div>
               </div>
               <div className={`tracking-step ${getStepClass('courier')}`}>
