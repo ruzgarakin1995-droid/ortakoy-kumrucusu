@@ -86,6 +86,7 @@ export default function AdminPage() {
   const [coupons, setCoupons] = useState([]);
   const [orders, setOrders] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [expenses, setExpenses] = useState([]);
   const [orderCount, setOrderCount] = useState(0);
 
   // Order alarm
@@ -109,6 +110,7 @@ export default function AdminPage() {
   const loadMenu = useCallback(async () => { try { setCategories(await apiFetch('/api/menu')); } catch {} }, []);
   const loadCoupons = useCallback(async () => { try { setCoupons(await apiFetch('/api/coupons')); } catch {} }, []);
   const loadSettings = useCallback(async () => { try { setSettings(await apiFetch('/api/settings')); } catch {} }, []);
+  const loadExpenses = useCallback(async () => { try { setExpenses(await apiFetch('/api/expenses')); } catch {} }, []);
   const loadOrders = useCallback(async () => {
     try {
       const data = await apiFetch('/api/orders');
@@ -120,8 +122,8 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!authed) return;
-    loadBanners(); loadFeatured(); loadMenu(); loadCoupons(); loadOrders(); loadSettings();
-  }, [authed, loadBanners, loadFeatured, loadMenu, loadCoupons, loadOrders, loadSettings]);
+    loadBanners(); loadFeatured(); loadMenu(); loadCoupons(); loadOrders(); loadSettings(); loadExpenses();
+  }, [authed, loadBanners, loadFeatured, loadMenu, loadCoupons, loadOrders, loadSettings, loadExpenses]);
 
   // ---- ORDER POLLING & ALARM ----
   useEffect(() => {
@@ -215,6 +217,7 @@ export default function AdminPage() {
     { id: 'menu', icon: 'fa-solid fa-utensils', label: '🍽️ Menü Yönetimi' },
     { id: 'coupons', icon: 'fa-solid fa-ticket', label: '🎟️ Kupon Kodları' },
     { id: 'orders', icon: 'fa-solid fa-box', label: '📦 Siparişler', badge: newOrders, activeBadge: activeOrders },
+    { id: 'finance', icon: 'fa-solid fa-chart-line', label: '💰 Maliyet & Finans' },
     { id: 'settings', icon: 'fa-solid fa-store', label: '🏪 İşletme Ayarları' },
   ];
 
@@ -314,6 +317,7 @@ export default function AdminPage() {
           {activeTab === 'coupons' && <CouponsTab coupons={coupons} reload={loadCoupons} />}
           {activeTab === 'orders' && <OrdersTab orders={orders} reload={loadOrders} />}
           {activeTab === 'settings' && <SettingsTab settings={settings} reload={loadSettings} />}
+          {activeTab === 'finance' && <FinanceTab expenses={expenses} categories={categories} orders={orders} reloadExpenses={loadExpenses} reloadCategories={loadMenu} />}
         </div>
       </main>
     </div>
@@ -363,13 +367,10 @@ function SidebarContent({ tabs, activeTab, setActiveTab, handleLogout }) {
         </button>
       </div>
     </>
-  );
-}
-
 // ============================================================
 // DASHBOARD TAB
 // ============================================================
-function DashboardTab({ banners, featured, categories, coupons, orders }) {
+function DashboardTab({ banners, featured, categories, coupons, orders, expenses = [] }) {
   const [timeFilter, setTimeFilter] = useState('daily');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
@@ -404,8 +405,43 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
     return true;
   });
 
-  const totalMenuItems = categories.reduce((sum, c) => sum + (c.items?.length || 0), 0);
+  const filteredExpenses = expenses.filter(e => {
+    if (!e.date) return true;
+    const expenseDate = new Date(e.date);
+    const now = new Date();
+    if (timeFilter === 'daily') return expenseDate.toDateString() === now.toDateString();
+    if (timeFilter === 'weekly') return expenseDate >= new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    if (timeFilter === 'monthly') return expenseDate >= new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    if (timeFilter === 'custom') {
+      if (!customStart && !customEnd) return true;
+      let valid = true;
+      if (customStart) valid = valid && expenseDate >= new Date(customStart);
+      if (customEnd) {
+        const end = new Date(customEnd); end.setHours(23, 59, 59, 999); valid = valid && expenseDate <= end;
+      }
+      return valid;
+    }
+    return true;
+  });
+
+  const costMap = {};
+  categories.forEach(c => c.items?.forEach(i => { costMap[i.title || i.name] = Number(i.cost || 0); }));
+
+  let totalProductCost = 0;
+  filteredOrders.forEach(o => {
+    if (o.status !== 'cancelled' && o.items) {
+      o.items.forEach(item => {
+        const itemName = item.title || item.name;
+        totalProductCost += (costMap[itemName] || 0) * (item.quantity || 1);
+      });
+    }
+  });
+
+  const totalFixedExpenses = filteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   const totalRevenue = filteredOrders.reduce((sum, o) => o.status !== 'cancelled' ? sum + (o.totalAmount || o.total || 0) : sum, 0);
+  const netIncome = totalRevenue - totalProductCost - totalFixedExpenses;
+
+  const totalMenuItems = categories.reduce((sum, c) => sum + (c.items?.length || 0), 0);
   const pendingOrders = filteredOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
   const completedOrders = filteredOrders.filter(o => o.status === 'delivered').length;
   const activeCoupons = coupons.filter(c => c.isActive).length;
@@ -426,14 +462,13 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
     .slice(0, 5);
 
   const stats = [
-    { icon: 'fa-solid fa-images', label: 'Banner', value: banners.length, color: '#3498db' },
-    { icon: 'fa-solid fa-star', label: 'Süper Lezzet', value: featured.length, color: '#f39c12' },
-    { icon: 'fa-solid fa-utensils', label: 'Menü Öğesi', value: totalMenuItems, color: '#27ae60' },
-    { icon: 'fa-solid fa-layer-group', label: 'Kategori', value: categories.length, color: '#9b59b6' },
-    { icon: 'fa-solid fa-ticket', label: 'Aktif Kupon', value: activeCoupons, color: '#e74c3c' },
+    { icon: 'fa-solid fa-turkish-lira-sign', label: 'Toplam Gelir', value: formatPrice(totalRevenue), color: '#2ecc71' },
+    { icon: 'fa-solid fa-chart-line', label: 'Net Kar', value: formatPrice(netIncome), color: netIncome >= 0 ? '#1abc9c' : '#e74c3c' },
+    { icon: 'fa-solid fa-receipt', label: 'Ürün Maliyeti', value: formatPrice(totalProductCost), color: '#f39c12' },
+    { icon: 'fa-solid fa-money-bill-wave', label: 'Sabit Giderler', value: formatPrice(totalFixedExpenses), color: '#e67e22' },
     { icon: 'fa-solid fa-check-circle', label: 'Tamamlanan Sipariş', value: completedOrders, color: '#4CAF50' },
     { icon: 'fa-solid fa-clock', label: 'Bekleyen Sipariş', value: pendingOrders, color: '#e67e22' },
-    { icon: 'fa-solid fa-turkish-lira-sign', label: 'Toplam Gelir', value: formatPrice(totalRevenue), color: '#2ecc71' },
+    { icon: 'fa-solid fa-ticket', label: 'Aktif Kupon', value: activeCoupons, color: '#e74c3c' },
   ];
 
   let emptyText = "Bu tarih aralığında henüz sipariş yok";
@@ -542,6 +577,202 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
   );
 }
 
+// ============================================================
+// FINANCE TAB
+// ============================================================
+function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCategories }) {
+  const [activeSubTab, setActiveSubTab] = useState('summary'); // summary, products, fixed
+  const [expenseForm, setExpenseForm] = useState({ id: '', name: '', amount: '' });
+
+  // Calculate Net Profit
+  const costMap = {};
+  categories.forEach(c => c.items?.forEach(i => { costMap[i.title || i.name] = Number(i.cost || 0); }));
+
+  let totalProductCost = 0;
+  let totalRevenue = 0;
+  orders.forEach(o => {
+    if (o.status !== 'cancelled') {
+      totalRevenue += (o.totalAmount || o.total || 0);
+      if (o.items) {
+        o.items.forEach(item => {
+          const itemName = item.title || item.name;
+          totalProductCost += (costMap[itemName] || 0) * (item.quantity || 1);
+        });
+      }
+    }
+  });
+
+  const totalFixedExpenses = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const netIncome = totalRevenue - totalProductCost - totalFixedExpenses;
+
+  async function saveExpense(e) {
+    e.preventDefault();
+    if (expenseForm.id) {
+      await apiFetch('/api/expenses', 'PUT', expenseForm);
+    } else {
+      await apiFetch('/api/expenses', 'POST', expenseForm);
+    }
+    setExpenseForm({ id: '', name: '', amount: '' });
+    reloadExpenses();
+  }
+
+  async function deleteExpense(id) {
+    if (confirm('Bu gideri silmek istediğinize emin misiniz?')) {
+      await apiFetch('/api/expenses', 'DELETE', { id });
+      reloadExpenses();
+    }
+  }
+
+  async function updateProductCost(categoryId, itemId, newCost) {
+    const category = categories.find(c => c.id === categoryId);
+    if (!category) return;
+    const itemIndex = category.items.findIndex(i => i.id === itemId);
+    if (itemIndex === -1) return;
+    category.items[itemIndex].cost = Number(newCost);
+    await apiFetch('/api/menu', 'PUT', category);
+    reloadCategories();
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>💰 Maliyet & Finans Yönetimi</h2>
+      </div>
+
+      <div style={{ display: 'flex', gap: 12, marginBottom: 24, borderBottom: `1px solid rgba(255,255,255,0.1)` }}>
+        {[
+          { id: 'summary', label: 'Finansal Özet' },
+          { id: 'products', label: 'Ürün Maliyetleri' },
+          { id: 'fixed', label: 'Sabit ve Diğer Giderler' }
+        ].map(tab => (
+          <button 
+            key={tab.id} 
+            onClick={() => setActiveSubTab(tab.id)}
+            style={{ 
+              background: 'transparent', border: 'none', color: activeSubTab === tab.id ? '#D4AF37' : 'rgba(255,255,255,0.5)',
+              padding: '12px 16px', fontSize: 15, fontWeight: activeSubTab === tab.id ? 600 : 400, cursor: 'pointer',
+              borderBottom: activeSubTab === tab.id ? `2px solid #D4AF37` : '2px solid transparent', marginBottom: -1
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeSubTab === 'summary' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+          <div className="admin-card" style={{ padding: 24, textAlign: 'center' }}>
+            <div style={{ fontSize: 32, color: '#2ecc71', marginBottom: 12 }}><i className="fa-solid fa-coins"></i></div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Toplam Ciro</div>
+            <div style={{ fontSize: 28, fontWeight: 700 }}>{formatPrice(totalRevenue)}</div>
+          </div>
+          <div className="admin-card" style={{ padding: 24, textAlign: 'center' }}>
+            <div style={{ fontSize: 32, color: '#f39c12', marginBottom: 12 }}><i className="fa-solid fa-receipt"></i></div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Toplam Ürün Maliyeti</div>
+            <div style={{ fontSize: 28, fontWeight: 700 }}>{formatPrice(totalProductCost)}</div>
+          </div>
+          <div className="admin-card" style={{ padding: 24, textAlign: 'center' }}>
+            <div style={{ fontSize: 32, color: '#e67e22', marginBottom: 12 }}><i className="fa-solid fa-money-bill-wave"></i></div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Toplam Sabit Giderler</div>
+            <div style={{ fontSize: 28, fontWeight: 700 }}>{formatPrice(totalFixedExpenses)}</div>
+          </div>
+          <div className="admin-card" style={{ padding: 24, textAlign: 'center', border: `2px solid ${netIncome >= 0 ? '#1abc9c' : '#e74c3c'}` }}>
+            <div style={{ fontSize: 32, color: netIncome >= 0 ? '#1abc9c' : '#e74c3c', marginBottom: 12 }}><i className="fa-solid fa-chart-line"></i></div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Net Kar</div>
+            <div style={{ fontSize: 28, fontWeight: 700 }}>{formatPrice(netIncome)}</div>
+          </div>
+        </div>
+      )}
+
+      {activeSubTab === 'products' && (
+        <div className="admin-card" style={{ padding: 24 }}>
+          <h3 style={{ marginTop: 0, marginBottom: 20 }}>Ürün Birim Maliyetleri</h3>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 20 }}>Menüdeki ürünlerin birim satış maliyetlerini (malzeme vb.) buradan güncelleyebilirsiniz. Değişiklikler anında kaydedilir.</p>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Kategori</th>
+                <th>Ürün Adı</th>
+                <th>Satış Fiyatı</th>
+                <th style={{ width: 200 }}>Birim Maliyet (₺)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {categories.map(c => c.items?.map(item => (
+                <tr key={item.id}>
+                  <td style={{ color: 'rgba(255,255,255,0.5)' }}>{c.title}</td>
+                  <td>{item.title || item.name}</td>
+                  <td>{formatPrice(item.price)}</td>
+                  <td>
+                    <input 
+                      type="number" 
+                      className="admin-input" 
+                      style={{ padding: '6px 12px', fontSize: 14 }}
+                      defaultValue={item.cost || 0}
+                      onBlur={e => {
+                        if (e.target.value !== String(item.cost || 0)) {
+                          updateProductCost(c.id, item.id, e.target.value);
+                        }
+                      }}
+                    />
+                  </td>
+                </tr>
+              )))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {activeSubTab === 'fixed' && (
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div className="admin-card" style={{ padding: 24, flex: 1, minWidth: 300 }}>
+            <h3 style={{ marginTop: 0, marginBottom: 20 }}>Gider Listesi</h3>
+            {expenses.length === 0 ? (
+              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: 20 }}>Henüz gider eklenmemiş.</div>
+            ) : (
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Gider Adı</th>
+                    <th>Tutar (₺)</th>
+                    <th style={{ textAlign: 'right' }}>İşlem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expenses.map(e => (
+                    <tr key={e.id}>
+                      <td>{e.name}</td>
+                      <td>{formatPrice(e.amount)}</td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setExpenseForm(e)} style={{ marginRight: 8 }}><i className="fa-solid fa-pen"></i></button>
+                        <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => deleteExpense(e.id)}><i className="fa-solid fa-trash"></i></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+          <form className="admin-card" style={{ padding: 24, width: '100%', maxWidth: 350 }} onSubmit={saveExpense}>
+            <h3 style={{ marginTop: 0, marginBottom: 20 }}>{expenseForm.id ? 'Gideri Düzenle' : 'Yeni Gider Ekle'}</h3>
+            <label className="admin-label">Gider Adı (Örn: Elektrik, Kira)</label>
+            <input type="text" className="admin-input" required value={expenseForm.name} onChange={e => setExpenseForm({...expenseForm, name: e.target.value})} style={{ marginBottom: 16 }} />
+            
+            <label className="admin-label">Tutar (₺)</label>
+            <input type="number" className="admin-input" required value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} style={{ marginBottom: 24 }} />
+            
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button type="submit" className="admin-btn admin-btn-gold" style={{ flex: 1, justifyContent: 'center' }}>Kaydet</button>
+              {expenseForm.id && (
+                <button type="button" className="admin-btn admin-btn-ghost" onClick={() => setExpenseForm({ id: '', name: '', amount: '' })}>İptal</button>
+              )}
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}
 // ============================================================
 // STATUS BADGE
 // ============================================================
