@@ -1230,13 +1230,13 @@ function OrdersTab({ orders, reload }) {
             value={dateFilter} 
             onChange={e => setDateFilter(e.target.value)}
             className="admin-input" 
-            style={{ width: 'auto', padding: '8px 12px', height: 'auto', fontSize: '14px' }}
+            style={{ width: 'auto', padding: '8px 12px', height: 'auto', fontSize: '14px', background: 'rgba(255,255,255,0.06)', color: '#fff' }}
           >
-            <option value="all">Tüm Zamanlar</option>
-            <option value="daily">Günlük (Bugün)</option>
-            <option value="weekly">Haftalık</option>
-            <option value="monthly">Aylık</option>
-            <option value="custom">Özel Tarih</option>
+            <option value="all" style={{ background: '#1a1a1a', color: '#fff' }}>Tüm Zamanlar</option>
+            <option value="daily" style={{ background: '#1a1a1a', color: '#fff' }}>Günlük (Bugün)</option>
+            <option value="weekly" style={{ background: '#1a1a1a', color: '#fff' }}>Haftalık</option>
+            <option value="monthly" style={{ background: '#1a1a1a', color: '#fff' }}>Aylık</option>
+            <option value="custom" style={{ background: '#1a1a1a', color: '#fff' }}>Özel Tarih</option>
           </select>
 
           {dateFilter === 'custom' && (
@@ -1472,9 +1472,9 @@ function SettingsTab({ settings, reload }) {
           
           <label style={{ display: 'block', marginBottom: 16 }}>
             <div style={{ marginBottom: 6, fontSize: 13, color: colors.textMuted }}>Mağaza Durumu (Açık/Kapalı)</div>
-            <select className="admin-input" value={form.isStoreOpen ? 'true' : 'false'} onChange={e => setForm({...form, isStoreOpen: e.target.value === 'true'})}>
-              <option value="true">Açık (Sipariş Alınabilir)</option>
-              <option value="false">Kapalı (Bakım / Servis Dışı)</option>
+            <select className="admin-input" style={{ background: 'rgba(255,255,255,0.06)', color: '#fff' }} value={form.isStoreOpen ? 'true' : 'false'} onChange={e => setForm({...form, isStoreOpen: e.target.value === 'true'})}>
+              <option value="true" style={{ background: '#1a1a1a', color: '#fff' }}>Açık (Sipariş Alınabilir)</option>
+              <option value="false" style={{ background: '#1a1a1a', color: '#fff' }}>Kapalı (Bakım / Servis Dışı)</option>
             </select>
           </label>
 
