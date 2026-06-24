@@ -465,8 +465,8 @@ function DashboardTab({ banners, featured, categories, coupons, orders, expenses
     .slice(0, 5);
 
   const stats = [
-    { icon: 'fa-solid fa-turkish-lira-sign', label: 'Toplam Gelir', value: formatPrice(totalRevenue), color: '#2ecc71' },
-    { icon: 'fa-solid fa-chart-line', label: 'Net Kar', value: formatPrice(netIncome), color: netIncome >= 0 ? '#1abc9c' : '#e74c3c' },
+    { icon: 'fa-solid fa-turkish-lira-sign', label: 'Toplam Ciro', value: formatPrice(totalRevenue), color: '#2ecc71' },
+    { icon: 'fa-solid fa-chart-line', label: 'Net Gelir', value: formatPrice(netIncome), color: netIncome >= 0 ? '#1abc9c' : '#e74c3c' },
     { icon: 'fa-solid fa-check-circle', label: 'Tamamlanan Sipariş', value: completedOrders, color: '#4CAF50' },
     { icon: 'fa-solid fa-clock', label: 'Bekleyen Sipariş', value: pendingOrders, color: '#e67e22' },
     { icon: 'fa-solid fa-ticket', label: 'Aktif Kupon', value: activeCoupons, color: '#e74c3c' },
@@ -679,7 +679,7 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
           </div>
           <div className="admin-card" style={{ padding: 24, textAlign: 'center', border: `2px solid ${netIncome >= 0 ? '#1abc9c' : '#e74c3c'}` }}>
             <div style={{ fontSize: 32, color: netIncome >= 0 ? '#1abc9c' : '#e74c3c', marginBottom: 12 }}><i className="fa-solid fa-chart-line"></i></div>
-            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Net Kar</div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Net Gelir</div>
             <div style={{ fontSize: 28, fontWeight: 700 }}>{formatPrice(netIncome)}</div>
           </div>
         </div>
