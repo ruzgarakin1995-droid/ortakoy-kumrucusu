@@ -375,6 +375,7 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
   const totalMenuItems = categories.reduce((sum, c) => sum + (c.items?.length || 0), 0);
   const totalRevenue = filteredOrders.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0);
   const pendingOrders = filteredOrders.filter(o => o.status !== 'delivered').length;
+  const completedOrders = filteredOrders.filter(o => o.status === 'delivered').length;
   const activeCoupons = coupons.filter(c => c.isActive).length;
 
   // Calculate top items
@@ -396,10 +397,10 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
     { icon: 'fa-solid fa-star', label: 'Süper Lezzet', value: featured.length, color: '#f39c12' },
     { icon: 'fa-solid fa-utensils', label: 'Menü Öğesi', value: totalMenuItems, color: '#27ae60' },
     { icon: 'fa-solid fa-layer-group', label: 'Kategori', value: categories.length, color: '#9b59b6' },
-    { icon: 'fa-solid fa-ticket', label: 'Aktif Kupon', value: activeCoupons, color: '#e74c3c' },
-    { icon: 'fa-solid fa-box', label: 'Filtreli Sipariş', value: filteredOrders.length, color: colors.gold },
-    { icon: 'fa-solid fa-clock', label: 'Bekleyen (Filtreli)', value: pendingOrders, color: '#e67e22' },
-    { icon: 'fa-solid fa-turkish-lira-sign', label: 'Filtreli Gelir', value: formatPrice(totalRevenue), color: '#2ecc71' },
+    { icon: 'fa-solid fa-box', label: 'Toplam Sipariş', value: filteredOrders.length, color: colors.gold },
+    { icon: 'fa-solid fa-clock', label: 'Bekleyen Sipariş', value: pendingOrders, color: '#e67e22' },
+    { icon: 'fa-solid fa-check-circle', label: 'Tamamlanan Sipariş', value: completedOrders, color: '#4CAF50' },
+    { icon: 'fa-solid fa-turkish-lira-sign', label: 'Toplam Gelir', value: formatPrice(totalRevenue), color: '#2ecc71' },
   ];
 
   return (
@@ -451,7 +452,7 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
         <div className="admin-card" style={{ padding: 24 }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <i className="fa-solid fa-clock-rotate-left" style={{ color: colors.gold }}></i> Son Siparişler (Filtreli)
+            <i className="fa-solid fa-clock-rotate-left" style={{ color: colors.gold }}></i> Son Siparişler
           </h3>
           {filteredOrders.length === 0 ? (
             <p style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>Bu tarih aralığında sipariş yok</p>
@@ -476,7 +477,7 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
 
         <div className="admin-card" style={{ padding: 24 }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <i className="fa-solid fa-fire" style={{ color: '#e74c3c' }}></i> En Çok Satan Ürünler (Filtreli)
+            <i className="fa-solid fa-fire" style={{ color: '#e74c3c' }}></i> En Çok Satan Ürünler
           </h3>
           {topItems.length === 0 ? (
             <p style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>Bu tarih aralığında veri yok</p>
