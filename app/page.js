@@ -1066,7 +1066,7 @@ export default function Home() {
 
       {/* ORDER TRACKING MODAL */}
       <div className={`custom-modal-overlay ${isTrackingOpen ? 'active' : ''}`}>
-        <div className="custom-modal-content" style={{ maxWidth: 500, padding: 30 }}>
+        <div className="custom-modal-content" style={{ maxWidth: 500, padding: 30, maxHeight: '90vh', overflowY: 'auto' }}>
           <h3>Sipariş Takibi</h3>
           <p style={{ marginBottom: 20 }}>Sipariş Numaranız: <strong>{trackingOrder?.id}</strong></p>
 
@@ -1079,22 +1079,28 @@ export default function Home() {
                 {trackingOrder.items.map((item, idx) => (
                   <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', color: '#eee', alignItems: 'flex-start' }}>
                     <div style={{ flex: 1, paddingRight: 10 }}>
-                      <span style={{ fontWeight: 600 }}>{item.quantity}x</span> {item.title || item.name}
+                      <span style={{ fontWeight: 600 }}>{item.quantity || 1}x</span> {item.title || item.name}
                       {item.selectedDrink && <div style={{ color: '#3498db', fontSize: 12, marginTop: 2 }}><i className="fa-solid fa-bottle-droplet" style={{marginRight: 4}}></i>{item.selectedDrink}</div>}
                       {item.excludedIngredients && item.excludedIngredients.length > 0 && <div style={{ color: '#e74c3c', fontSize: 12, marginTop: 2 }}><i className="fa-solid fa-ban" style={{marginRight: 4}}></i>Çıkarılan: {item.excludedIngredients.join(', ')}</div>}
                     </div>
-                    <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{(item.price * item.quantity).toFixed(2)} TL</span>
+                    <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{(item.price * (item.quantity || 1)).toFixed(2)} TL</span>
                   </div>
                 ))}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 12, marginBottom: 8 }}>
                 <span style={{ color: 'var(--text-muted)' }}>Ödeme Yöntemi:</span>
                 <span style={{ fontWeight: 600 }}>
-                  {trackingOrder.paymentMethod === 'cash' ? 'Kapıda Nakit' : 
-                   trackingOrder.paymentMethod === 'credit_card' ? 'Kapıda Kredi Kartı' : 
-                   trackingOrder.paymentMethod === 'online' ? 'Online Ödeme' : trackingOrder.paymentMethod}
+                  {trackingOrder.customerInfo?.paymentMethod === 'nakit' ? 'Kapıda Nakit' : 
+                   trackingOrder.customerInfo?.paymentMethod === 'kredi_karti' ? 'Kapıda Kredi Kartı' : 
+                   trackingOrder.customerInfo?.paymentMethod === 'online' ? 'Online Ödeme' : trackingOrder.customerInfo?.paymentMethod || 'Belirtilmedi'}
                 </span>
               </div>
+              {trackingOrder.discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Kupon İndirimi{trackingOrder.couponCode ? ` (${trackingOrder.couponCode})` : ''}:</span>
+                  <span style={{ color: '#2ecc71', fontWeight: 600 }}>-{trackingOrder.discount} TL</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Toplam Tutar:</span>
                 <span style={{ color: 'var(--primary-color)', fontWeight: 700, fontSize: 16 }}>{trackingOrder.totalAmount || trackingOrder.total} TL</span>
