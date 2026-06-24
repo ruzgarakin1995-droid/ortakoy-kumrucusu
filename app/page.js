@@ -1108,43 +1108,57 @@ export default function Home() {
             </div>
           )}
           
-          <div className="order-tracking-container">
-            <div className={`tracking-step ${getStepClass('received')}`}>
-              <div className="step-icon"><i className="fa-solid fa-check"></i></div>
-              <div className="step-info">
-                <div className="step-title">Siparişiniz Alındı</div>
-                <div className="step-time">Anında</div>
+          {trackingOrder?.status === 'cancelled' ? (
+            <div style={{ background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', borderRadius: 12, padding: 24, textAlign: 'center', marginBottom: 24 }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>😔</div>
+              <h4 style={{ color: '#e74c3c', fontSize: 18, marginBottom: 8, fontWeight: 700 }}>Siparişiniz İptal Edildi</h4>
+              <p style={{ color: '#eee', fontSize: 14, marginBottom: 16, lineHeight: 1.5 }}>Çok özür dileriz ama maalesef siparişiniz iptal oldu.</p>
+              {trackingOrder.statusHistory?.find(h => h.status === 'cancelled')?.note && (
+                <div style={{ background: 'rgba(0,0,0,0.2)', padding: 12, borderRadius: 8, textAlign: 'left', borderLeft: '3px solid #e74c3c' }}>
+                  <div style={{ color: '#e74c3c', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>İptal Notu:</div>
+                  <div style={{ color: '#ddd', fontSize: 13, fontStyle: 'italic' }}>{trackingOrder.statusHistory.find(h => h.status === 'cancelled').note}</div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="order-tracking-container">
+              <div className={`tracking-step ${getStepClass('received')}`}>
+                <div className="step-icon"><i className="fa-solid fa-check"></i></div>
+                <div className="step-info">
+                  <div className="step-title">Siparişiniz Alındı</div>
+                  <div className="step-time">Anında</div>
+                </div>
+              </div>
+              <div className={`tracking-step ${getStepClass('preparing')}`}>
+                <div className="step-icon">👨‍🍳</div>
+                <div className="step-info">
+                  <div className="step-title">Hazırlanıyor</div>
+                  <div className="step-time">Ustalarımız hazırlıyor</div>
+                </div>
+              </div>
+              <div className={`tracking-step ${getStepClass('courier')}`}>
+                <div className="step-icon">🏍️</div>
+                <div className="step-info">
+                  <div className="step-title">Kuryeye Teslim Edildi</div>
+                  <div className="step-time">Yola çıkmak üzere</div>
+                </div>
+              </div>
+              <div className={`tracking-step ${getStepClass('onway')}`}>
+                <div className="step-icon"><i className="fa-solid fa-road"></i></div>
+                <div className="step-info">
+                  <div className="step-title">Yola Çıktı</div>
+                  <div className="step-time">Size doğru geliyor</div>
+                </div>
+              </div>
+              <div className={`tracking-step ${getStepClass('delivered')}`}>
+                <div className="step-icon">📦</div>
+                <div className="step-info">
+                  <div className="step-title">Teslim Edildi</div>
+                  <div className="step-time">Afiyet olsun!</div>
+                </div>
               </div>
             </div>
-            <div className={`tracking-step ${getStepClass('preparing')}`}>
-              <div className="step-icon">👨‍🍳</div>
-              <div className="step-info">
-                <div className="step-title">Hazırlanıyor</div>
-                <div className="step-time">Ustalarımız hazırlıyor</div>
-              </div>
-            </div>
-            <div className={`tracking-step ${getStepClass('courier')}`}>
-              <div className="step-icon">🏍️</div>
-              <div className="step-info">
-                <div className="step-title">Kuryeye Teslim Edildi</div>
-                <div className="step-time">Yola çıkmak üzere</div>
-              </div>
-            </div>
-            <div className={`tracking-step ${getStepClass('onway')}`}>
-              <div className="step-icon"><i className="fa-solid fa-road"></i></div>
-              <div className="step-info">
-                <div className="step-title">Yola Çıktı</div>
-                <div className="step-time">Size doğru geliyor</div>
-              </div>
-            </div>
-            <div className={`tracking-step ${getStepClass('delivered')}`}>
-              <div className="step-icon">📦</div>
-              <div className="step-info">
-                <div className="step-title">Teslim Edildi</div>
-                <div className="step-time">Afiyet olsun!</div>
-              </div>
-            </div>
-          </div>
+          )}
           
           <div className="modal-actions" style={{ marginTop: 30 }}>
             <button className="btn-modal-primary" onClick={() => setIsTrackingOpen(false)}>Kapat</button>
