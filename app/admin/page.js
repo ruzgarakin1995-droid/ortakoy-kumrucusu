@@ -367,6 +367,9 @@ function SidebarContent({ tabs, activeTab, setActiveTab, handleLogout }) {
         </button>
       </div>
     </>
+  );
+}
+
 // ============================================================
 // DASHBOARD TAB
 // ============================================================
