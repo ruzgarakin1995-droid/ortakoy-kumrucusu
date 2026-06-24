@@ -1161,7 +1161,13 @@ export default function Home() {
           )}
           
           <div className="modal-actions" style={{ marginTop: 30 }}>
-            <button className="btn-modal-primary" onClick={() => setIsTrackingOpen(false)}>Kapat</button>
+            <button className="btn-modal-primary" onClick={() => {
+              setIsTrackingOpen(false);
+              if (trackingOrder?.status === 'cancelled') {
+                setTrackingOrder(null);
+                if (typeof window !== 'undefined') localStorage.removeItem('trackingOrderId');
+              }
+            }}>Kapat</button>
           </div>
         </div>
       </div>
