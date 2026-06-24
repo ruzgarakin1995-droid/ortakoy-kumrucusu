@@ -170,7 +170,7 @@ export default function AdminPage() {
 
   async function dismissReminder(id) {
     setActiveReminders(prev => prev.filter(r => r.id !== id));
-    await apiFetch('/api/reminders', 'PUT', { id, lastRemindedAt: new Date().toISOString() });
+    await apiFetch('/api/reminders', { method: 'PUT', body: JSON.stringify({ id, lastRemindedAt: new Date().toISOString() }) });
     loadReminders();
   }
 
@@ -674,9 +674,9 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
   async function saveExpense(e) {
     e.preventDefault();
     if (expenseForm.id) {
-      await apiFetch('/api/expenses', 'PUT', expenseForm);
+      await apiFetch('/api/expenses', { method: 'PUT', body: JSON.stringify(expenseForm) });
     } else {
-      await apiFetch('/api/expenses', 'POST', expenseForm);
+      await apiFetch('/api/expenses', { method: 'POST', body: JSON.stringify(expenseForm) });
     }
     setExpenseForm({ id: '', name: '', amount: '' });
     reloadExpenses();
@@ -684,7 +684,7 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
 
   async function deleteExpense(id) {
     if (confirm('Bu gideri silmek istediğinize emin misiniz?')) {
-      await apiFetch('/api/expenses', 'DELETE', { id });
+      await apiFetch('/api/expenses', { method: 'DELETE', body: JSON.stringify({ id }) });
       reloadExpenses();
     }
   }
@@ -692,9 +692,9 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
   async function saveReminder(e) {
     e.preventDefault();
     if (reminderForm.id) {
-      await apiFetch('/api/reminders', 'PUT', reminderForm);
+      await apiFetch('/api/reminders', { method: 'PUT', body: JSON.stringify(reminderForm) });
     } else {
-      await apiFetch('/api/reminders', 'POST', reminderForm);
+      await apiFetch('/api/reminders', { method: 'POST', body: JSON.stringify(reminderForm) });
     }
     setReminderForm({ id: '', title: '', amount: '', dueDate: '', reminderAdvance: '1d', reminderFrequency: 'daily' });
     reloadReminders();
@@ -702,13 +702,13 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
 
   async function deleteReminder(id) {
     if (confirm('Bu hatırlatıcıyı silmek istediğinize emin misiniz?')) {
-      await apiFetch('/api/reminders', 'DELETE', { id });
+      await apiFetch('/api/reminders', { method: 'DELETE', body: JSON.stringify({ id }) });
       reloadReminders();
     }
   }
 
   async function markReminderPaid(id) {
-    await apiFetch('/api/reminders', 'PUT', { id, isPaid: true });
+    await apiFetch('/api/reminders', { method: 'PUT', body: JSON.stringify({ id, isPaid: true }) });
     reloadReminders();
   }
 
@@ -718,7 +718,7 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
     const itemIndex = category.items.findIndex(i => i.id === itemId);
     if (itemIndex === -1) return;
     category.items[itemIndex].cost = Number(newCost);
-    await apiFetch('/api/menu', 'PUT', category);
+    await apiFetch('/api/menu', { method: 'PUT', body: JSON.stringify(category) });
     reloadCategories();
   }
 
