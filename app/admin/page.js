@@ -148,6 +148,22 @@ export default function AdminPage() {
     prevOrderCountRef.current = orderCount;
   }, []);
 
+  // ---- PENDING ALARM (Every 2 mins) ----
+  const pendingOrdersRef = useRef(0);
+  useEffect(() => {
+    pendingOrdersRef.current = orders.filter(o => o.status === 'received').length;
+  }, [orders]);
+
+  useEffect(() => {
+    if (!authed) return;
+    const interval = setInterval(() => {
+      if (pendingOrdersRef.current > 0) {
+        playAlarm();
+      }
+    }, 120000); // 2 minutes
+    return () => clearInterval(interval);
+  }, [authed]);
+
   function playAlarm() {
     try {
       if (!alarmAudioRef.current) {
@@ -265,6 +281,14 @@ export default function AdminPage() {
 
       {/* ===== MAIN CONTENT ===== */}
       <main className="admin-content" style={{ flex: 1, marginLeft: 260, minHeight: '100vh' }}>
+        {/* Pending Orders Warning Banner */}
+        {newOrders > 0 && (
+          <div style={{ background: 'rgba(231,76,60,0.1)', borderBottom: '1px solid #e74c3c', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, color: '#e74c3c', fontWeight: 600 }}>
+            <span className="admin-pulse" style={{ width: 10, height: 10 }}></span>
+            {newOrders} adet bekleyen yeni siparişiniz var! Lütfen kontrol edin.
+          </div>
+        )}
+
         {/* Header */}
         <header style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(13,13,13,0.8)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 50 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
