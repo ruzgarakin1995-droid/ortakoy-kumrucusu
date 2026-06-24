@@ -25,7 +25,11 @@ export async function GET(request) {
       statusHistory: order.statusHistory,
       createdAt: order.createdAt,
       items: order.items,
-      total: order.total
+      total: order.total,
+      subTotal: order.subTotal,
+      discount: order.discount,
+      couponCode: order.couponCode,
+      customerInfo: { paymentMethod: order.customerInfo?.paymentMethod }
     });
   }
   
