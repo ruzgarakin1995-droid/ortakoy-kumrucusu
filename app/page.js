@@ -1133,28 +1133,28 @@ export default function Home() {
                 <div className="step-icon">👨‍🍳</div>
                 <div className="step-info">
                   <div className="step-title">Hazırlanıyor</div>
-                  <div className="step-time">Ustalarımız hazırlıyor</div>
+                  <div className="step-time" style={{ fontSize: 13, lineHeight: 1.4 }}>Siparişiniz en lezzetli şekilde özel şef ustalarımız sizler için hazırlıyorlar.</div>
                 </div>
               </div>
               <div className={`tracking-step ${getStepClass('courier')}`}>
                 <div className="step-icon">🏍️</div>
                 <div className="step-info">
                   <div className="step-title">Kuryeye Teslim Edildi</div>
-                  <div className="step-time">Yola çıkmak üzere</div>
+                  <div className="step-time" style={{ fontSize: 13, lineHeight: 1.4 }}>Kuryelerimiz bu özel paketi sizlere ulaştırmak için hazırda bekliyor.</div>
                 </div>
               </div>
               <div className={`tracking-step ${getStepClass('onway')}`}>
                 <div className="step-icon"><i className="fa-solid fa-road"></i></div>
                 <div className="step-info">
                   <div className="step-title">Yola Çıktı</div>
-                  <div className="step-time">Size doğru geliyor</div>
+                  <div className="step-time" style={{ fontSize: 13, lineHeight: 1.4 }}>Siparişiniz size ulaşıp bu eşsiz lezzeti deneyimlemeniz için yola çıktı ve adım adım sizlere yaklaşıyor.</div>
                 </div>
               </div>
               <div className={`tracking-step ${getStepClass('delivered')}`}>
                 <div className="step-icon">📦</div>
                 <div className="step-info">
                   <div className="step-title">Teslim Edildi</div>
-                  <div className="step-time">Afiyet olsun!</div>
+                  <div className="step-time" style={{ fontSize: 13, lineHeight: 1.4 }}>Sevgiyle hazırladık, keyifle yemeniz dileğiyle. Afiyet, bal, şeker olsun!</div>
                 </div>
               </div>
             </div>
