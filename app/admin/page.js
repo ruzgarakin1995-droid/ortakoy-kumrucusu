@@ -403,6 +403,11 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
     { icon: 'fa-solid fa-turkish-lira-sign', label: 'Toplam Gelir', value: formatPrice(totalRevenue), color: '#2ecc71' },
   ];
 
+  let emptyText = "Bu tarih aralığında henüz sipariş yok";
+  if (timeFilter === 'daily') emptyText = "Bugün henüz sipariş yok";
+  if (timeFilter === 'weekly') emptyText = "Bu hafta henüz sipariş yok";
+  if (timeFilter === 'monthly') emptyText = "Bu ay henüz sipariş yok";
+
   return (
     <div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 24, padding: '16px 20px', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -455,7 +460,7 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
             <i className="fa-solid fa-clock-rotate-left" style={{ color: colors.gold }}></i> Son Siparişler
           </h3>
           {filteredOrders.length === 0 ? (
-            <p style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>Bu tarih aralığında sipariş yok</p>
+            <p style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>{emptyText}</p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table className="admin-table">
@@ -480,7 +485,7 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
             <i className="fa-solid fa-fire" style={{ color: '#e74c3c' }}></i> En Çok Satan Ürünler
           </h3>
           {topItems.length === 0 ? (
-            <p style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>Bu tarih aralığında veri yok</p>
+            <p style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>{emptyText}</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {topItems.map((item, idx) => (
