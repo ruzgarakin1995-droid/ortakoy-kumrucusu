@@ -1,8 +1,18 @@
 import './globals.css';
 
+import PWAInstallPrompt from './components/PWAInstallPrompt';
+import ServiceWorkerRegister from './components/ServiceWorkerRegister';
+
 export const metadata = {
   title: 'Ortaköy Kumrucusu | Dijital Menü',
   description: 'Ortaköy Kumrucusu Burhaniye - Premium fast food, kumru, kumpir, tost, burger ve daha fazlası. Online sipariş verin!',
+  manifest: '/manifest.json',
+  themeColor: '#ffaa00',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Ortaköy Kumrucusu',
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -15,7 +25,11 @@ export default function RootLayout({ children }) {
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <PWAInstallPrompt />
+        <ServiceWorkerRegister />
+      </body>
     </html>
   );
 }
