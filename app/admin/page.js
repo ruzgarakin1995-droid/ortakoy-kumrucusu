@@ -1343,7 +1343,19 @@ function OrdersTab({ orders, reload }) {
                             <tbody>
                               {order.items.map((item, idx) => (
                                 <tr key={idx}>
-                                  <td style={{ fontWeight: 500 }}>{item.title || item.name}</td>
+                                  <td>
+                                    <div style={{ fontWeight: 500 }}>{item.title || item.name}</div>
+                                    {item.excludedIngredients && item.excludedIngredients.length > 0 && (
+                                      <div style={{ fontSize: 11, color: '#e74c3c', marginTop: 4 }}>
+                                        <i className="fa-solid fa-ban" style={{ marginRight: 4 }}></i> Çıkarılan: {item.excludedIngredients.join(', ')}
+                                      </div>
+                                    )}
+                                    {item.selectedDrink && (
+                                      <div style={{ fontSize: 11, color: '#3498db', marginTop: 4 }}>
+                                        <i className="fa-solid fa-bottle-droplet" style={{ marginRight: 4 }}></i> İçecek: {item.selectedDrink}
+                                      </div>
+                                    )}
+                                  </td>
                                   <td>{item.quantity || 1}</td>
                                   <td>{formatPrice(item.price || 0)}</td>
                                   <td style={{ color: colors.gold }}>{formatPrice((item.price || 0) * (item.quantity || 1))}</td>
