@@ -397,9 +397,9 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
     { icon: 'fa-solid fa-star', label: 'Süper Lezzet', value: featured.length, color: '#f39c12' },
     { icon: 'fa-solid fa-utensils', label: 'Menü Öğesi', value: totalMenuItems, color: '#27ae60' },
     { icon: 'fa-solid fa-layer-group', label: 'Kategori', value: categories.length, color: '#9b59b6' },
-    { icon: 'fa-solid fa-box', label: 'Toplam Sipariş', value: filteredOrders.length, color: colors.gold },
-    { icon: 'fa-solid fa-clock', label: 'Bekleyen Sipariş', value: pendingOrders, color: '#e67e22' },
+    { icon: 'fa-solid fa-ticket', label: 'Aktif Kupon', value: activeCoupons, color: '#e74c3c' },
     { icon: 'fa-solid fa-check-circle', label: 'Tamamlanan Sipariş', value: completedOrders, color: '#4CAF50' },
+    { icon: 'fa-solid fa-clock', label: 'Bekleyen Sipariş', value: pendingOrders, color: '#e67e22' },
     { icon: 'fa-solid fa-turkish-lira-sign', label: 'Toplam Gelir', value: formatPrice(totalRevenue), color: '#2ecc71' },
   ];
 
