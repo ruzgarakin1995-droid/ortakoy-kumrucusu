@@ -2679,3 +2679,15 @@ input:checked + .slider:before {
   opacity: 0.6;
   font-style: italic;
 }
+
+/* Google Translate Hiding */
+.skiptranslate iframe,
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+body {
+  top: 0 !important;
+}
+.goog-te-spinner-pos {
+  display: none !important;
+}

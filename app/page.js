@@ -12,6 +12,8 @@ const toastMessages = [
   "Bu eşsiz lezzeti henüz tatmadın mı?"
 ];
 
+import LanguageSelector from './components/LanguageSelector';
+
 export default function Home() {
   const [data, setData] = useState({ banners: [], featured: [], categories: [], settings: null });
   const [cart, setCart] = useState([]);
@@ -357,7 +359,8 @@ export default function Home() {
     <>
       {/* HEADER */}
       <header className="hero">
-        <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
+        <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, display: 'flex', gap: '8px' }}>
+          <LanguageSelector />
           <button className="admin-profile-btn" onClick={() => setIsLoginOpen(true)}>
             <i className="fa-solid fa-user-shield"></i>
           </button>
