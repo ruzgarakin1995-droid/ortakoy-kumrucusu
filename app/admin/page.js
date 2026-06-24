@@ -405,15 +405,15 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
   });
 
   const totalMenuItems = categories.reduce((sum, c) => sum + (c.items?.length || 0), 0);
-  const totalRevenue = filteredOrders.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0);
-  const pendingOrders = filteredOrders.filter(o => o.status !== 'delivered').length;
+  const totalRevenue = filteredOrders.reduce((sum, o) => o.status !== 'cancelled' ? sum + (o.totalAmount || o.total || 0) : sum, 0);
+  const pendingOrders = filteredOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
   const completedOrders = filteredOrders.filter(o => o.status === 'delivered').length;
   const activeCoupons = coupons.filter(c => c.isActive).length;
 
   // Calculate top items
   const itemCounts = {};
   filteredOrders.forEach(o => {
-    if (o.items && Array.isArray(o.items)) {
+    if (o.status !== 'cancelled' && o.items && Array.isArray(o.items)) {
       o.items.forEach(item => {
         itemCounts[item.name] = (itemCounts[item.name] || 0) + (item.quantity || 1);
       });
