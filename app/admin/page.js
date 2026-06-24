@@ -733,7 +733,7 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
           { id: 'summary', label: 'Finansal Özet' },
           { id: 'products', label: 'Ürün Maliyetleri' },
           { id: 'fixed', label: 'Sabit ve Diğer Giderler' },
-          { id: 'extra', label: 'Ekstra Ödemeler / Alarmlar' }
+          { id: 'extra', label: 'Ödemeler / Alarmlar' }
         ].map(tab => (
           <button 
             key={tab.id} 
