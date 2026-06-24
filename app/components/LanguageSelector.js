@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 
 const languages = [
-  { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
-  { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
-  { code: 'ar', name: 'العربية', flag: '🇸🇦' }
+  { code: 'tr', name: 'Türkçe', flagUrl: 'https://flagcdn.com/w40/tr.png' },
+  { code: 'en', name: 'English', flagUrl: 'https://flagcdn.com/w40/gb.png' },
+  { code: 'de', name: 'Deutsch', flagUrl: 'https://flagcdn.com/w40/de.png' },
+  { code: 'ru', name: 'Русский', flagUrl: 'https://flagcdn.com/w40/ru.png' },
+  { code: 'ar', name: 'العربية', flagUrl: 'https://flagcdn.com/w40/sa.png' }
 ];
 
 export default function LanguageSelector() {
@@ -53,9 +53,9 @@ export default function LanguageSelector() {
       <button 
         className="admin-profile-btn" 
         onClick={() => setIsOpen(!isOpen)}
-        style={{ fontSize: '18px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        style={{ padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       >
-        {activeLang.flag}
+        <img src={activeLang.flagUrl} alt={activeLang.name} style={{ width: '24px', height: 'auto', borderRadius: '4px' }} />
       </button>
       
       {isOpen && (
@@ -63,7 +63,7 @@ export default function LanguageSelector() {
           position: 'absolute', top: '100%', right: 0, marginTop: '8px',
           background: 'rgba(25, 25, 25, 0.95)', border: '1px solid var(--glass-border)',
           borderRadius: '12px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px',
-          zIndex: 100, backdropFilter: 'blur(10px)', minWidth: '130px',
+          zIndex: 9999, backdropFilter: 'blur(10px)', minWidth: '130px',
           boxShadow: '0 4px 15px rgba(0,0,0,0.5)'
         }}>
           {languages.map(lang => (
@@ -80,7 +80,7 @@ export default function LanguageSelector() {
               onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <span style={{ fontSize: '18px' }}>{lang.flag}</span> 
+              <img src={lang.flagUrl} alt={lang.name} style={{ width: '20px', height: 'auto', borderRadius: '2px' }} /> 
               <span>{lang.name}</span>
             </button>
           ))}
