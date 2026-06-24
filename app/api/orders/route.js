@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getOrders, setOrders, getCoupons, setCoupons, validateSession } from '../../../lib/store';
+import webpush from 'web-push';
+import { getOrders, setOrders, getCoupons, setCoupons, validateSession, getVapidKeys } from '../../../lib/store';
 
 export const dynamic = 'force-dynamic';
 
@@ -80,15 +81,46 @@ export async function PUT(request) {
     
     orders[index].status = status;
     orders[index].isNew = false;
+    const finalNote = note || getStatusNote(status);
     orders[index].statusHistory.push({
       status,
       timestamp: new Date().toISOString(),
-      note: note || getStatusNote(status)
+      note: finalNote
     });
+    
+    // Send Push Notification if user subscribed
+    if (orders[index].pushSubscription) {
+      try {
+        const vapidKeys = await getVapidKeys();
+        if (vapidKeys) {
+          webpush.setVapidDetails(
+            vapidKeys.subject,
+            vapidKeys.publicKey,
+            vapidKeys.privateKey
+          );
+          
+          let notifTitle = 'Sipariş Durumu';
+          let notifBody = finalNote;
+          
+          if (status === 'preparing') { notifTitle = 'Siparişiniz Hazırlanıyor'; }
+          if (status === 'onway') { notifTitle = 'Siparişiniz Yola Çıktı'; }
+          if (status === 'delivered') { notifTitle = 'Siparişiniz Teslim Edildi'; }
+          if (status === 'courier') { notifTitle = 'Kuryeye Teslim Edildi'; }
+          
+          await webpush.sendNotification(
+            orders[index].pushSubscription,
+            JSON.stringify({ title: notifTitle, body: notifBody })
+          );
+        }
+      } catch (pushErr) {
+        console.error('Push notification failed:', pushErr);
+      }
+    }
     
     await setOrders(orders);
     return NextResponse.json(orders[index]);
   } catch (error) {
+    console.error('PUT Error:', error);
     return NextResponse.json({ error: 'Hata' }, { status: 500 });
   }
 }

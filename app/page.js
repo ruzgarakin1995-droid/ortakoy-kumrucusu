@@ -173,6 +173,41 @@ export default function Home() {
     }
   };
 
+  const requestPushPermission = async (orderId) => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        const registration = await navigator.serviceWorker.ready;
+        const response = await fetch('/api/notifications/vapid');
+        const { publicKey } = await response.json();
+        
+        // Base64 to Uint8Array converter
+        const padding = '='.repeat((4 - publicKey.length % 4) % 4);
+        const base64 = (publicKey + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: outputArray
+        });
+        
+        await fetch('/api/notifications/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscription, orderId })
+        });
+      }
+    } catch (e) {
+      console.error('Push notification error:', e);
+    }
+  };
+
   // --- Order Submission ---
   const submitOrder = async () => {
     try {
@@ -201,6 +236,9 @@ export default function Home() {
       setTrackingOrder(order);
       setIsTrackingOpen(true);
       if (typeof window !== 'undefined') localStorage.setItem('trackingOrderId', order.id);
+      
+      // Ask for push notification permission
+      requestPushPermission(order.id);
       
       // Start polling
       pollOrderStatus(order.id);

@@ -343,6 +343,20 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
   const pendingOrders = orders.filter(o => o.status !== 'delivered').length;
   const activeCoupons = coupons.filter(c => c.isActive).length;
 
+  // Calculate top items
+  const itemCounts = {};
+  orders.forEach(o => {
+    if (o.items && Array.isArray(o.items)) {
+      o.items.forEach(item => {
+        itemCounts[item.name] = (itemCounts[item.name] || 0) + (item.quantity || 1);
+      });
+    }
+  });
+  const topItems = Object.entries(itemCounts)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+
   const stats = [
     { icon: 'fa-solid fa-images', label: 'Banner', value: banners.length, color: '#3498db' },
     { icon: 'fa-solid fa-star', label: 'Süper Lezzet', value: featured.length, color: '#f39c12' },
@@ -372,31 +386,57 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
         ))}
       </div>
 
-      {/* Recent orders */}
-      <div className="admin-card" style={{ padding: 24 }}>
-        <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <i className="fa-solid fa-clock-rotate-left" style={{ color: colors.gold }}></i> Son Siparişler
-        </h3>
-        {orders.length === 0 ? (
-          <p style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>Henüz sipariş yok</p>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="admin-table">
-              <thead><tr><th>Sipariş</th><th>Müşteri</th><th>Tutar</th><th>Durum</th><th>Tarih</th></tr></thead>
-              <tbody>
-                {orders.slice(0, 5).map(o => (
-                  <tr key={o.id}>
-                    <td style={{ fontWeight: 600 }}>#{o.id?.slice(-6)}</td>
-                    <td>{o.customerName || o.customer?.name || '-'}</td>
-                    <td style={{ color: colors.gold, fontWeight: 600 }}>{formatPrice(o.totalAmount || 0)}</td>
-                    <td><StatusBadge status={o.status} /></td>
-                    <td style={{ color: colors.textMuted, fontSize: 13 }}>{formatDate(o.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      {/* Recent orders and Top Items */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+        <div className="admin-card" style={{ padding: 24 }}>
+          <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <i className="fa-solid fa-clock-rotate-left" style={{ color: colors.gold }}></i> Son Siparişler
+          </h3>
+          {orders.length === 0 ? (
+            <p style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>Henüz sipariş yok</p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="admin-table">
+                <thead><tr><th>Sipariş</th><th>Müşteri</th><th>Tutar</th><th>Durum</th></tr></thead>
+                <tbody>
+                  {orders.slice(0, 5).map(o => (
+                    <tr key={o.id}>
+                      <td style={{ fontWeight: 600 }}>#{o.id?.slice(-6)}</td>
+                      <td>{o.customerInfo?.name || o.customerName || '-'}</td>
+                      <td style={{ color: colors.gold, fontWeight: 600 }}>{formatPrice(o.total || o.totalAmount || 0)}</td>
+                      <td><StatusBadge status={o.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="admin-card" style={{ padding: 24 }}>
+          <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <i className="fa-solid fa-fire" style={{ color: '#e74c3c' }}></i> En Çok Satan Ürünler
+          </h3>
+          {topItems.length === 0 ? (
+            <p style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>Henüz veri yok</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {topItems.map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: idx < 3 ? 'rgba(212,175,55,0.2)' : 'rgba(255,255,255,0.1)', color: idx < 3 ? colors.gold : '#aaa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13 }}>
+                      {idx + 1}
+                    </div>
+                    <span style={{ fontWeight: 600 }}>{item.name}</span>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 20, fontSize: 13, fontWeight: 600 }}>
+                    {item.count} adet
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
