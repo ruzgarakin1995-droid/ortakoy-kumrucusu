@@ -206,6 +206,7 @@ export default function AdminPage() {
   if (!authed) return null;
 
   const newOrders = orders.filter(o => o.status === 'received').length;
+  const activeOrders = orders.filter(o => o.status === 'preparing' || o.status === 'on_way').length;
 
   const tabs = [
     { id: 'dashboard', icon: 'fa-solid fa-chart-pie', label: '📊 Dashboard' },
@@ -213,7 +214,7 @@ export default function AdminPage() {
     { id: 'featured', icon: 'fa-solid fa-star', label: '⭐ Süper Lezzetler' },
     { id: 'menu', icon: 'fa-solid fa-utensils', label: '🍽️ Menü Yönetimi' },
     { id: 'coupons', icon: 'fa-solid fa-ticket', label: '🎟️ Kupon Kodları' },
-    { id: 'orders', icon: 'fa-solid fa-box', label: '📦 Siparişler', badge: newOrders },
+    { id: 'orders', icon: 'fa-solid fa-box', label: '📦 Siparişler', badge: newOrders, activeBadge: activeOrders },
     { id: 'settings', icon: 'fa-solid fa-store', label: '🏪 İşletme Ayarları' },
   ];
 
@@ -340,10 +341,17 @@ function SidebarContent({ tabs, activeTab, setActiveTab, handleLogout }) {
           }}>
             <span style={{ fontSize: 16, width: 24, textAlign: 'center' }}>{tab.label.split(' ')[0]}</span>
             <span>{tab.label.split(' ').slice(1).join(' ')}</span>
-            {tab.badge > 0 && (
+            {((tab.badge && tab.badge > 0) || (tab.activeBadge && tab.activeBadge > 0)) && (
               <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="admin-pulse" />
-                <span style={{ background: colors.danger, color: '#fff', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>{tab.badge}</span>
+                {tab.badge > 0 && (
+                  <>
+                    <span className="admin-pulse" />
+                    <span style={{ background: colors.danger, color: '#fff', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>{tab.badge}</span>
+                  </>
+                )}
+                {tab.activeBadge > 0 && (
+                  <span style={{ background: '#3498db', color: '#fff', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>{tab.activeBadge}</span>
+                )}
               </span>
             )}
           </button>
