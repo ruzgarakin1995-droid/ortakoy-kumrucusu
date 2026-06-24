@@ -338,14 +338,48 @@ function SidebarContent({ tabs, activeTab, setActiveTab, handleLogout }) {
 // DASHBOARD TAB
 // ============================================================
 function DashboardTab({ banners, featured, categories, coupons, orders }) {
+  const [timeFilter, setTimeFilter] = useState('daily');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
+
+  const filteredOrders = orders.filter(o => {
+    if (!o.createdAt) return true;
+    const orderDate = new Date(o.createdAt);
+    const now = new Date();
+    
+    if (timeFilter === 'daily') {
+      return orderDate.toDateString() === now.toDateString();
+    }
+    if (timeFilter === 'weekly') {
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return orderDate >= oneWeekAgo;
+    }
+    if (timeFilter === 'monthly') {
+      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      return orderDate >= oneMonthAgo;
+    }
+    if (timeFilter === 'custom') {
+      if (!customStart && !customEnd) return true;
+      let valid = true;
+      if (customStart) valid = valid && orderDate >= new Date(customStart);
+      if (customEnd) {
+        const end = new Date(customEnd);
+        end.setHours(23, 59, 59, 999);
+        valid = valid && orderDate <= end;
+      }
+      return valid;
+    }
+    return true;
+  });
+
   const totalMenuItems = categories.reduce((sum, c) => sum + (c.items?.length || 0), 0);
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-  const pendingOrders = orders.filter(o => o.status !== 'delivered').length;
+  const totalRevenue = filteredOrders.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0);
+  const pendingOrders = filteredOrders.filter(o => o.status !== 'delivered').length;
   const activeCoupons = coupons.filter(c => c.isActive).length;
 
   // Calculate top items
   const itemCounts = {};
-  orders.forEach(o => {
+  filteredOrders.forEach(o => {
     if (o.items && Array.isArray(o.items)) {
       o.items.forEach(item => {
         itemCounts[item.name] = (itemCounts[item.name] || 0) + (item.quantity || 1);
@@ -363,13 +397,40 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
     { icon: 'fa-solid fa-utensils', label: 'Menü Öğesi', value: totalMenuItems, color: '#27ae60' },
     { icon: 'fa-solid fa-layer-group', label: 'Kategori', value: categories.length, color: '#9b59b6' },
     { icon: 'fa-solid fa-ticket', label: 'Aktif Kupon', value: activeCoupons, color: '#e74c3c' },
-    { icon: 'fa-solid fa-box', label: 'Toplam Sipariş', value: orders.length, color: colors.gold },
-    { icon: 'fa-solid fa-clock', label: 'Bekleyen', value: pendingOrders, color: '#e67e22' },
-    { icon: 'fa-solid fa-turkish-lira-sign', label: 'Toplam Gelir', value: formatPrice(totalRevenue), color: '#2ecc71' },
+    { icon: 'fa-solid fa-box', label: 'Filtreli Sipariş', value: filteredOrders.length, color: colors.gold },
+    { icon: 'fa-solid fa-clock', label: 'Bekleyen (Filtreli)', value: pendingOrders, color: '#e67e22' },
+    { icon: 'fa-solid fa-turkish-lira-sign', label: 'Filtreli Gelir', value: formatPrice(totalRevenue), color: '#2ecc71' },
   ];
 
   return (
     <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 24, padding: '16px 20px', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 16 }}>
+          <i className="fa-solid fa-calendar-days" style={{ color: colors.gold }}></i>
+          <span style={{ fontWeight: 600, color: colors.text }}>Tarih Filtresi:</span>
+        </div>
+        {['daily', 'weekly', 'monthly', 'custom'].map(f => (
+          <button 
+            key={f} 
+            onClick={() => setTimeFilter(f)}
+            style={{ 
+              padding: '6px 16px', borderRadius: 20, border: '1px solid rgba(212,175,55,0.3)',
+              background: timeFilter === f ? 'rgba(212,175,55,0.15)' : 'transparent',
+              color: timeFilter === f ? colors.gold : colors.text, cursor: 'pointer',
+              transition: 'all 0.2s', fontSize: 13, fontWeight: 600
+            }}>
+            {f === 'daily' ? 'Günlük' : f === 'weekly' ? 'Haftalık' : f === 'monthly' ? 'Aylık' : 'Özel Tarih'}
+          </button>
+        ))}
+        {timeFilter === 'custom' && (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }}>
+            <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: colors.text, colorScheme: 'dark', fontSize: 13 }} />
+            <span style={{ color: colors.textMuted }}>-</span>
+            <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: colors.text, colorScheme: 'dark', fontSize: 13 }} />
+          </div>
+        )}
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16, marginBottom: 32 }}>
         {stats.map((s, i) => (
           <div key={i} className="admin-card" style={{ padding: '20px 24px', animation: `fadeIn 0.4s ease ${i * 0.05}s both` }}>
@@ -390,16 +451,16 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
         <div className="admin-card" style={{ padding: 24 }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <i className="fa-solid fa-clock-rotate-left" style={{ color: colors.gold }}></i> Son Siparişler
+            <i className="fa-solid fa-clock-rotate-left" style={{ color: colors.gold }}></i> Son Siparişler (Filtreli)
           </h3>
-          {orders.length === 0 ? (
-            <p style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>Henüz sipariş yok</p>
+          {filteredOrders.length === 0 ? (
+            <p style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>Bu tarih aralığında sipariş yok</p>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table className="admin-table">
                 <thead><tr><th>Sipariş</th><th>Müşteri</th><th>Tutar</th><th>Durum</th></tr></thead>
                 <tbody>
-                  {orders.slice(0, 5).map(o => (
+                  {filteredOrders.slice(0, 5).map(o => (
                     <tr key={o.id}>
                       <td style={{ fontWeight: 600 }}>#{o.id?.slice(-6)}</td>
                       <td>{o.customerInfo?.name || o.customerName || '-'}</td>
@@ -415,10 +476,10 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
 
         <div className="admin-card" style={{ padding: 24 }}>
           <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <i className="fa-solid fa-fire" style={{ color: '#e74c3c' }}></i> En Çok Satan Ürünler
+            <i className="fa-solid fa-fire" style={{ color: '#e74c3c' }}></i> En Çok Satan Ürünler (Filtreli)
           </h3>
           {topItems.length === 0 ? (
-            <p style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>Henüz veri yok</p>
+            <p style={{ color: colors.textMuted, textAlign: 'center', padding: 40 }}>Bu tarih aralığında veri yok</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {topItems.map((item, idx) => (
