@@ -206,7 +206,7 @@ export default function AdminPage() {
   if (!authed) return null;
 
   const newOrders = orders.filter(o => o.status === 'received').length;
-  const activeOrders = orders.filter(o => o.status === 'preparing' || o.status === 'on_way').length;
+  const activeOrders = orders.filter(o => o.status === 'preparing' || o.status === 'courier' || o.status === 'onway').length;
 
   const tabs = [
     { id: 'dashboard', icon: 'fa-solid fa-chart-pie', label: '📊 Dashboard' },
