@@ -87,6 +87,8 @@ export default function AdminPage() {
   const [orders, setOrders] = useState([]);
   const [settings, setSettings] = useState(null);
   const [expenses, setExpenses] = useState([]);
+  const [reminders, setReminders] = useState([]);
+  const [activeReminders, setActiveReminders] = useState([]);
   const [orderCount, setOrderCount] = useState(0);
 
   // Order alarm
@@ -111,6 +113,7 @@ export default function AdminPage() {
   const loadCoupons = useCallback(async () => { try { setCoupons(await apiFetch('/api/coupons')); } catch {} }, []);
   const loadSettings = useCallback(async () => { try { setSettings(await apiFetch('/api/settings')); } catch {} }, []);
   const loadExpenses = useCallback(async () => { try { setExpenses(await apiFetch('/api/expenses')); } catch {} }, []);
+  const loadReminders = useCallback(async () => { try { setReminders(await apiFetch('/api/reminders')); } catch {} }, []);
   const loadOrders = useCallback(async () => {
     try {
       const data = await apiFetch('/api/orders');
@@ -122,8 +125,54 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!authed) return;
-    loadBanners(); loadFeatured(); loadMenu(); loadCoupons(); loadOrders(); loadSettings(); loadExpenses();
-  }, [authed, loadBanners, loadFeatured, loadMenu, loadCoupons, loadOrders, loadSettings, loadExpenses]);
+    loadBanners(); loadFeatured(); loadMenu(); loadCoupons(); loadOrders(); loadSettings(); loadExpenses(); loadReminders();
+  }, [authed, loadBanners, loadFeatured, loadMenu, loadCoupons, loadOrders, loadSettings, loadExpenses, loadReminders]);
+
+  // ---- REMINDER CHECKER ----
+  useEffect(() => {
+    if (!authed || reminders.length === 0) return;
+    
+    const checkReminders = () => {
+      const now = new Date();
+      const triggered = [];
+      reminders.forEach(r => {
+        if (r.isPaid) return;
+        const due = new Date(r.dueDate);
+        let triggerDate = new Date(due);
+        if (r.reminderAdvance === '1h') triggerDate.setHours(due.getHours() - 1);
+        else if (r.reminderAdvance === '1d') triggerDate.setDate(due.getDate() - 1);
+        else if (r.reminderAdvance === '1w') triggerDate.setDate(due.getDate() - 7);
+        else if (r.reminderAdvance === '10d') triggerDate.setDate(due.getDate() - 10);
+        else return; // Hiçbiri or invalid
+        
+        if (now >= triggerDate) {
+          // Check frequency
+          if (!r.lastRemindedAt) {
+            triggered.push(r);
+          } else {
+            const last = new Date(r.lastRemindedAt);
+            if (r.reminderFrequency === 'hourly' && (now - last) >= 60 * 60 * 1000) triggered.push(r);
+            else if (r.reminderFrequency === 'daily' && (now - last) >= 24 * 60 * 60 * 1000) triggered.push(r);
+          }
+        }
+      });
+      if (triggered.length > 0) setActiveReminders(prev => {
+        const newArr = [...prev];
+        triggered.forEach(t => { if (!newArr.find(a => a.id === t.id)) newArr.push(t); });
+        return newArr;
+      });
+    };
+    
+    checkReminders();
+    const interval = setInterval(checkReminders, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, [authed, reminders]);
+
+  async function dismissReminder(id) {
+    setActiveReminders(prev => prev.filter(r => r.id !== id));
+    await apiFetch('/api/reminders', 'PUT', { id, lastRemindedAt: new Date().toISOString() });
+    loadReminders();
+  }
 
   // ---- ORDER POLLING & ALARM ----
   useEffect(() => {
@@ -283,6 +332,21 @@ export default function AdminPage() {
         </aside>
       )}
 
+      {/* ===== REMINDERS POPUP ===== */}
+      <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {activeReminders.map(r => (
+          <div key={r.id} style={{ background: '#2c3e50', borderLeft: '4px solid #f39c12', padding: 16, borderRadius: 8, boxShadow: '0 10px 25px rgba(0,0,0,0.5)', width: 320, animation: 'fadeIn 0.3s ease' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ fontWeight: 600, color: '#f39c12', marginBottom: 4 }}><i className="fa-solid fa-bell admin-pulse"></i> Ödeme Hatırlatması</div>
+              <button onClick={() => dismissReminder(r.id)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.5 }}><i className="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style={{ fontSize: 15, marginBottom: 4 }}>{r.title}</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 12 }}>Tutar: {formatPrice(r.amount)} | Son Ödeme: {new Date(r.dueDate).toLocaleDateString('tr-TR')}</div>
+            <button onClick={() => { dismissReminder(r.id); setActiveTab('finance'); }} className="admin-btn admin-btn-sm" style={{ background: 'rgba(243, 156, 18, 0.2)', color: '#f39c12', width: '100%', justifyContent: 'center' }}>Finans Sekmesine Git</button>
+          </div>
+        ))}
+      </div>
+
       {/* ===== MAIN CONTENT ===== */}
       <main className="admin-content" style={{ flex: 1, marginLeft: 260, minHeight: '100vh' }}>
         {/* Pending Orders Warning Banner */}
@@ -317,7 +381,7 @@ export default function AdminPage() {
           {activeTab === 'coupons' && <CouponsTab coupons={coupons} reload={loadCoupons} />}
           {activeTab === 'orders' && <OrdersTab orders={orders} reload={loadOrders} />}
           {activeTab === 'settings' && <SettingsTab settings={settings} reload={loadSettings} />}
-          {activeTab === 'finance' && <FinanceTab expenses={expenses} categories={categories} orders={orders} reloadExpenses={loadExpenses} reloadCategories={loadMenu} />}
+          {activeTab === 'finance' && <FinanceTab expenses={expenses} categories={categories} orders={orders} reloadExpenses={loadExpenses} reloadCategories={loadMenu} reminders={reminders} reloadReminders={loadReminders} />}
         </div>
       </main>
     </div>
@@ -581,9 +645,10 @@ function DashboardTab({ banners, featured, categories, coupons, orders, expenses
 // ============================================================
 // FINANCE TAB
 // ============================================================
-function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCategories }) {
-  const [activeSubTab, setActiveSubTab] = useState('summary'); // summary, products, fixed
+function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCategories, reminders, reloadReminders }) {
+  const [activeSubTab, setActiveSubTab] = useState('summary'); // summary, products, fixed, extra
   const [expenseForm, setExpenseForm] = useState({ id: '', name: '', amount: '' });
+  const [reminderForm, setReminderForm] = useState({ id: '', title: '', amount: '', dueDate: '', reminderAdvance: '1d', reminderFrequency: 'daily' });
 
   // Calculate Net Profit
   const costMap = {};
@@ -624,6 +689,29 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
     }
   }
 
+  async function saveReminder(e) {
+    e.preventDefault();
+    if (reminderForm.id) {
+      await apiFetch('/api/reminders', 'PUT', reminderForm);
+    } else {
+      await apiFetch('/api/reminders', 'POST', reminderForm);
+    }
+    setReminderForm({ id: '', title: '', amount: '', dueDate: '', reminderAdvance: '1d', reminderFrequency: 'daily' });
+    reloadReminders();
+  }
+
+  async function deleteReminder(id) {
+    if (confirm('Bu hatırlatıcıyı silmek istediğinize emin misiniz?')) {
+      await apiFetch('/api/reminders', 'DELETE', { id });
+      reloadReminders();
+    }
+  }
+
+  async function markReminderPaid(id) {
+    await apiFetch('/api/reminders', 'PUT', { id, isPaid: true });
+    reloadReminders();
+  }
+
   async function updateProductCost(categoryId, itemId, newCost) {
     const category = categories.find(c => c.id === categoryId);
     if (!category) return;
@@ -644,7 +732,8 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
         {[
           { id: 'summary', label: 'Finansal Özet' },
           { id: 'products', label: 'Ürün Maliyetleri' },
-          { id: 'fixed', label: 'Sabit ve Diğer Giderler' }
+          { id: 'fixed', label: 'Sabit ve Diğer Giderler' },
+          { id: 'extra', label: 'Ekstra Ödemeler / Alarmlar' }
         ].map(tab => (
           <button 
             key={tab.id} 
@@ -777,11 +866,83 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
           </form>
         </div>
       )}
+
+      {activeSubTab === 'extra' && (
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div className="admin-card" style={{ padding: 24, flex: 1, minWidth: 300 }}>
+            <h3 style={{ marginTop: 0, marginBottom: 20 }}>Yaklaşan Ödemeler</h3>
+            {(!reminders || reminders.length === 0) ? (
+              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: 20 }}>Henüz ödeme/alarm eklenmemiş.</div>
+            ) : (
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Ödeme Adı</th>
+                    <th>Son Ödeme Tarihi</th>
+                    <th>Tutar (₺)</th>
+                    <th>Durum</th>
+                    <th style={{ textAlign: 'right' }}>İşlem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reminders.map(r => (
+                    <tr key={r.id}>
+                      <td>{r.title}</td>
+                      <td>{new Date(r.dueDate).toLocaleString('tr-TR')}</td>
+                      <td>{formatPrice(r.amount)}</td>
+                      <td>{r.isPaid ? <span style={{ color: '#2ecc71' }}>Ödendi</span> : <span style={{ color: '#e74c3c' }}>Bekliyor</span>}</td>
+                      <td style={{ textAlign: 'right' }}>
+                        {!r.isPaid && <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => markReminderPaid(r.id)} style={{ marginRight: 8, color: '#2ecc71' }} title="Ödendi İşaretle"><i className="fa-solid fa-check"></i></button>}
+                        <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setReminderForm(r)} style={{ marginRight: 8 }}><i className="fa-solid fa-pen"></i></button>
+                        <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => deleteReminder(r.id)}><i className="fa-solid fa-trash"></i></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+          <form className="admin-card" style={{ padding: 24, width: '100%', maxWidth: 350 }} onSubmit={saveReminder}>
+            <h3 style={{ marginTop: 0, marginBottom: 20 }}>{reminderForm.id ? 'Ödemeyi Düzenle' : 'Yeni Ödeme/Alarm Ekle'}</h3>
+            <label className="admin-label">Ödeme Başlığı (Kira, Fatura vb.)</label>
+            <input type="text" className="admin-input" required value={reminderForm.title} onChange={e => setReminderForm({...reminderForm, title: e.target.value})} style={{ marginBottom: 16 }} />
+            
+            <label className="admin-label">Tutar (₺)</label>
+            <input type="number" className="admin-input" required value={reminderForm.amount} onChange={e => setReminderForm({...reminderForm, amount: e.target.value})} style={{ marginBottom: 16 }} />
+            
+            <label className="admin-label">Son Ödeme Tarihi & Saati</label>
+            <input type="datetime-local" className="admin-input" required value={reminderForm.dueDate ? reminderForm.dueDate.slice(0,16) : ''} onChange={e => setReminderForm({...reminderForm, dueDate: new Date(e.target.value).toISOString()})} style={{ marginBottom: 16 }} />
+            
+            <label className="admin-label">Alarm Ne Zaman Çalsın?</label>
+            <select className="admin-input" value={reminderForm.reminderAdvance} onChange={e => setReminderForm({...reminderForm, reminderAdvance: e.target.value})} style={{ marginBottom: 16 }}>
+              <option value="none">Hatırlatma Yok</option>
+              <option value="1h">1 Saat Önce</option>
+              <option value="1d">1 Gün Önce</option>
+              <option value="1w">1 Hafta Önce</option>
+              <option value="10d">10 Gün Önce</option>
+            </select>
+
+            <label className="admin-label">Hatırlatma Sıklığı (Alarm Sürecinde)</label>
+            <select className="admin-input" value={reminderForm.reminderFrequency} onChange={e => setReminderForm({...reminderForm, reminderFrequency: e.target.value})} style={{ marginBottom: 24 }}>
+              <option value="always">Her Sayfa Yenilendiğinde</option>
+              <option value="hourly">Her 1 Saatte Bir</option>
+              <option value="daily">Günde 1 Kez</option>
+            </select>
+            
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button type="submit" className="admin-btn admin-btn-gold" style={{ flex: 1, justifyContent: 'center' }}>Kaydet</button>
+              {reminderForm.id && (
+                <button type="button" className="admin-btn admin-btn-ghost" onClick={() => setReminderForm({ id: '', title: '', amount: '', dueDate: '', reminderAdvance: '1d', reminderFrequency: 'daily' })}>İptal</button>
+              )}
+            </div>
+          </form>
+        </div>
+      )}
+
     </div>
   );
 }
-// ============================================================
-// STATUS BADGE
+
 // ============================================================
 function StatusBadge({ status }) {
   const s = statusColors[status] || statusColors.received;
