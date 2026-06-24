@@ -13,7 +13,8 @@ export async function GET() {
 export async function POST(request) {
   try {
     const data = await request.json();
-    const reminders = await getReminders();
+    let reminders = await getReminders();
+    if (!Array.isArray(reminders)) reminders = [];
     
     const newReminder = {
       id: 'rem_' + Date.now(),
@@ -39,7 +40,8 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     const data = await request.json();
-    const reminders = await getReminders();
+    let reminders = await getReminders();
+    if (!Array.isArray(reminders)) reminders = [];
     
     const index = reminders.findIndex(r => r.id === data.id);
     if (index === -1) {
@@ -58,7 +60,8 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     const { id } = await request.json();
-    const reminders = await getReminders();
+    let reminders = await getReminders();
+    if (!Array.isArray(reminders)) reminders = [];
     
     const newReminders = reminders.filter(r => r.id !== id);
     await setReminders(newReminders);

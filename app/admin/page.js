@@ -113,7 +113,7 @@ export default function AdminPage() {
   const loadCoupons = useCallback(async () => { try { setCoupons(await apiFetch('/api/coupons')); } catch {} }, []);
   const loadSettings = useCallback(async () => { try { setSettings(await apiFetch('/api/settings')); } catch {} }, []);
   const loadExpenses = useCallback(async () => { try { setExpenses(await apiFetch('/api/expenses')); } catch {} }, []);
-  const loadReminders = useCallback(async () => { try { setReminders(await apiFetch('/api/reminders')); } catch {} }, []);
+  const loadReminders = useCallback(async () => { try { const res = await apiFetch('/api/reminders'); setReminders(Array.isArray(res) ? res : []); } catch {} }, []);
   const loadOrders = useCallback(async () => {
     try {
       const data = await apiFetch('/api/orders');
