@@ -467,8 +467,6 @@ function DashboardTab({ banners, featured, categories, coupons, orders, expenses
   const stats = [
     { icon: 'fa-solid fa-turkish-lira-sign', label: 'Toplam Gelir', value: formatPrice(totalRevenue), color: '#2ecc71' },
     { icon: 'fa-solid fa-chart-line', label: 'Net Kar', value: formatPrice(netIncome), color: netIncome >= 0 ? '#1abc9c' : '#e74c3c' },
-    { icon: 'fa-solid fa-receipt', label: 'Ürün Maliyeti', value: formatPrice(totalProductCost), color: '#f39c12' },
-    { icon: 'fa-solid fa-money-bill-wave', label: 'Sabit Giderler', value: formatPrice(totalFixedExpenses), color: '#e67e22' },
     { icon: 'fa-solid fa-check-circle', label: 'Tamamlanan Sipariş', value: completedOrders, color: '#4CAF50' },
     { icon: 'fa-solid fa-clock', label: 'Bekleyen Sipariş', value: pendingOrders, color: '#e67e22' },
     { icon: 'fa-solid fa-ticket', label: 'Aktif Kupon', value: activeCoupons, color: '#e74c3c' },
@@ -753,6 +751,12 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
                     </tr>
                   ))}
                 </tbody>
+                <tfoot>
+                  <tr style={{ borderTop: '2px solid rgba(255,255,255,0.1)' }}>
+                    <td style={{ fontWeight: 700, paddingTop: 16 }}>TOPLAM</td>
+                    <td style={{ fontWeight: 700, paddingTop: 16 }} colSpan="2">{formatPrice(expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0))}</td>
+                  </tr>
+                </tfoot>
               </table>
             )}
           </div>
