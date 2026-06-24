@@ -415,7 +415,8 @@ function DashboardTab({ banners, featured, categories, coupons, orders }) {
   filteredOrders.forEach(o => {
     if (o.status !== 'cancelled' && o.items && Array.isArray(o.items)) {
       o.items.forEach(item => {
-        itemCounts[item.name] = (itemCounts[item.name] || 0) + (item.quantity || 1);
+        const itemName = item.title || item.name || 'Bilinmeyen Ürün';
+        itemCounts[itemName] = (itemCounts[itemName] || 0) + (item.quantity || 1);
       });
     }
   });
