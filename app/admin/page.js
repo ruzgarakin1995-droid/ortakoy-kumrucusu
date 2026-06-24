@@ -914,7 +914,7 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
             <input type="datetime-local" className="admin-input" required value={reminderForm.dueDate ? reminderForm.dueDate.slice(0,16) : ''} onChange={e => setReminderForm({...reminderForm, dueDate: new Date(e.target.value).toISOString()})} style={{ marginBottom: 16 }} />
             
             <label className="admin-label">Alarm Ne Zaman Çalsın?</label>
-            <select className="admin-input" value={reminderForm.reminderAdvance} onChange={e => setReminderForm({...reminderForm, reminderAdvance: e.target.value})} style={{ marginBottom: 16 }}>
+            <select className="admin-select" value={reminderForm.reminderAdvance} onChange={e => setReminderForm({...reminderForm, reminderAdvance: e.target.value})} style={{ marginBottom: 16 }}>
               <option value="none">Hatırlatma Yok</option>
               <option value="1h">1 Saat Önce</option>
               <option value="1d">1 Gün Önce</option>
@@ -923,7 +923,7 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
             </select>
 
             <label className="admin-label">Hatırlatma Sıklığı (Alarm Sürecinde)</label>
-            <select className="admin-input" value={reminderForm.reminderFrequency} onChange={e => setReminderForm({...reminderForm, reminderFrequency: e.target.value})} style={{ marginBottom: 24 }}>
+            <select className="admin-select" value={reminderForm.reminderFrequency} onChange={e => setReminderForm({...reminderForm, reminderFrequency: e.target.value})} style={{ marginBottom: 24 }}>
               <option value="always">Her Sayfa Yenilendiğinde</option>
               <option value="hourly">Her 1 Saatte Bir</option>
               <option value="daily">Günde 1 Kez</option>
