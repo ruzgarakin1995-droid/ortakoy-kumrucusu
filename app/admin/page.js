@@ -260,6 +260,7 @@ export default function AdminPage() {
   const activeOrders = orders.filter(o => o.status === 'preparing' || o.status === 'courier' || o.status === 'onway').length;
 
   const tabs = [
+    { id: 'design', icon: 'fa-solid fa-palette', label: '🎨 Tasarım Yönetimi' },
     { id: 'dashboard', icon: 'fa-solid fa-chart-pie', label: '📊 Dashboard' },
     { id: 'banners', icon: 'fa-solid fa-images', label: '🎠 Slider Bannerlar' },
     { id: 'featured', icon: 'fa-solid fa-star', label: '⭐ Süper Lezzetler' },
@@ -380,7 +381,8 @@ export default function AdminPage() {
           {activeTab === 'menu' && <MenuTab categories={categories} reload={loadMenu} />}
           {activeTab === 'coupons' && <CouponsTab coupons={coupons} reload={loadCoupons} />}
           {activeTab === 'orders' && <OrdersTab orders={orders} reload={loadOrders} />}
-          {activeTab === 'settings' && <SettingsTab settings={settings} reload={loadSettings} />}
+          {activeTab === 'design' && <DesignTab settings={settings} reload={loadSettings} />}
+            {activeTab === 'settings' && <SettingsTab settings={settings} reload={loadSettings} />}
           {activeTab === 'finance' && <FinanceTab expenses={expenses} categories={categories} orders={orders} reloadExpenses={loadExpenses} reloadCategories={loadMenu} reminders={reminders} reloadReminders={loadReminders} />}
         </div>
       </main>
@@ -1931,6 +1933,210 @@ function SettingsTab({ settings, reload }) {
           </label>
 
         </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ============================================================
+// DESIGN TAB
+// ============================================================
+function DesignTab({ settings, reload }) {
+  const [saving, setSaving] = useState(false);
+  const [customColor, setCustomColor] = useState(settings?.themeColor || '#eab308');
+
+  async function handleSelectColor(colorHex) {
+    if (settings?.themeColor === colorHex) return;
+    setSaving(true);
+    try {
+      await apiFetch('/api/settings', { method: 'PUT', body: JSON.stringify({ ...settings, themeColor: colorHex }) });
+      reload();
+      alert('Tasarım rengi başarıyla güncellendi!');
+    } catch (e) {
+      alert('Hata: ' + e.message);
+    }
+    setSaving(false);
+  }
+
+  async function handleSelectBg(bgId) {
+    if (settings?.bgThemeId === bgId && !settings?.customBgImage) return;
+    setSaving(true);
+    try {
+      await apiFetch('/api/settings', { method: 'PUT', body: JSON.stringify({ ...settings, bgThemeId: bgId, customBgImage: null }) });
+      reload();
+      alert('Arka plan teması başarıyla güncellendi!');
+    } catch (e) {
+      alert('Hata: ' + e.message);
+    }
+    setSaving(false);
+  }
+
+  const [bgUploading, setBgUploading] = useState(false);
+  async function handleCustomBgUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setBgUploading(true);
+    const data = new FormData();
+    data.append('file', file);
+    
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` },
+        body: data
+      });
+      const result = await res.json();
+      if (res.ok && result.url) {
+        await apiFetch('/api/settings', { method: 'PUT', body: JSON.stringify({ ...settings, bgThemeId: 'custom', customBgImage: result.url }) });
+        reload();
+        alert('Özel arka plan başarıyla yüklendi!');
+      } else {
+        alert(result.error || 'Yükleme başarısız');
+      }
+    } catch (err) {
+      alert('Yükleme hatası');
+    } finally {
+      setBgUploading(false);
+    }
+  }
+
+  const getSvgBg = (svgStr) => `url("data:image/svg+xml,${encodeURIComponent(svgStr)}")`;
+
+  const THEME_BACKGROUNDS = [
+    { id: 'default', name: 'Sade (Varsayılan)', bg: 'none', icon: 'fa-solid fa-ban' },
+    { id: 'dots', name: 'Noktalı Desen', bg: getSvgBg(`<svg width='40' height='40' xmlns='http://www.w3.org/2000/svg'><circle cx='20' cy='20' r='2.5' fill='#9ca3af' fill-opacity='0.4'/></svg>`), icon: 'fa-solid fa-ellipsis' },
+    { id: 'diagonal', name: 'Çapraz Çizgiler', bg: getSvgBg(`<svg width='40' height='40' xmlns='http://www.w3.org/2000/svg'><path d='M0 40L40 0M-10 10L10 -10M30 50L50 30' stroke='#9ca3af' stroke-width='2' stroke-opacity='0.2'/></svg>`), icon: 'fa-solid fa-slash' },
+    { id: 'waves', name: 'Dalgalı Desen', bg: getSvgBg(`<svg width='40' height='20' xmlns='http://www.w3.org/2000/svg'><path d='M0 10 Q 10 0, 20 10 T 40 10' fill='none' stroke='#9ca3af' stroke-width='2' stroke-opacity='0.25'/></svg>`), icon: 'fa-solid fa-water' },
+    { id: 'checkers', name: 'Kareli Desen', bg: getSvgBg(`<svg width='40' height='40' xmlns='http://www.w3.org/2000/svg'><rect width='20' height='20' fill='#9ca3af' fill-opacity='0.15'/><rect x='20' y='20' width='20' height='20' fill='#9ca3af' fill-opacity='0.15'/></svg>`), icon: 'fa-solid fa-chess-board' },
+    { id: 'grid', name: 'Izgara Desen', bg: getSvgBg(`<svg width='40' height='40' xmlns='http://www.w3.org/2000/svg'><path d='M20 0v40M0 20h40' fill='none' stroke='#9ca3af' stroke-width='2' stroke-opacity='0.2'/></svg>`), icon: 'fa-solid fa-table-cells' },
+    { id: 'rings', name: 'Halkalı Desen', bg: getSvgBg(`<svg width='40' height='40' xmlns='http://www.w3.org/2000/svg'><circle cx='20' cy='20' r='14' fill='none' stroke='#9ca3af' stroke-width='2' stroke-opacity='0.25'/></svg>`), icon: 'fa-solid fa-bullseye' },
+    { id: 'zigzag', name: 'Geometrik Desen', bg: getSvgBg(`<svg width='40' height='40' xmlns='http://www.w3.org/2000/svg'><path d='M0 40 L40 0 Z' fill='none' stroke='#9ca3af' stroke-opacity='0.2' stroke-width='3'/></svg>`), icon: 'fa-solid fa-shapes' },
+    { id: 'diamonds', name: 'Elmas Desen', bg: getSvgBg(`<svg width='40' height='40' xmlns='http://www.w3.org/2000/svg'><path d='M20 0 L40 20 L20 40 L0 20 Z' fill='none' stroke='#9ca3af' stroke-opacity='0.2' stroke-width='2'/></svg>`), icon: 'fa-regular fa-gem' }
+  ];
+
+  const THEME_COLORS = [
+    { name: 'Sarı (Varsayılan)', hex: '#eab308' },
+    { name: 'Turuncu', hex: '#f97316' },
+    { name: 'Kırmızı', hex: '#ef4444' },
+    { name: 'Yeşil', hex: '#22c55e' },
+    { name: 'Mavi', hex: '#3b82f6' },
+    { name: 'Mor', hex: '#a855f7' },
+    { name: 'Pembe', hex: '#ec4899' },
+    { name: 'Siyah', hex: '#18181b' },
+    { name: 'Kahverengi', hex: '#8b4513' },
+    { name: 'Lacivert', hex: '#1e3a8a' },
+    { name: 'Bordo', hex: '#7f1d1d' },
+    { name: 'Zümrüt', hex: '#065f46' },
+    { name: 'Turkuaz', hex: '#0d9488' },
+    { name: 'Hardal', hex: '#ca8a04' },
+    { name: 'Gümüş Gri', hex: '#9ca3af' }
+  ];
+
+  return (
+    <div className="admin-card" style={{ padding: 24, animation: 'fadeIn 0.3s ease' }}>
+      <h2 style={{ margin: 0, fontSize: 20, marginBottom: 8 }}>Tasarım Yönetimi</h2>
+      <p style={{ color: colors.textMuted, marginBottom: 24, fontSize: 14 }}>
+        Müşteri ekranındaki ana butonların ve öne çıkan alanların rengini anında değiştirebilirsiniz. Koyu renkler seçildiğinde yazı rengi otomatik olarak beyaza döner.
+      </p>
+
+      <h3 style={{ fontSize: 16, color: colors.gold, marginTop: 16, marginBottom: 16, borderBottom: '1px solid ' + colors.border, paddingBottom: 8 }}>Hazır Renkler</h3>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        {THEME_COLORS.map(c => {
+          const isActive = settings?.themeColor === c.hex || (!settings?.themeColor && c.hex === '#eab308');
+          return (
+            <button 
+              key={c.hex}
+              disabled={saving}
+              onClick={() => handleSelectColor(c.hex)}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+                background: 'var(--surface-color)',
+                border: isActive ? `2px solid ${c.hex}` : '2px solid var(--glass-border)',
+                borderRadius: 12, padding: 16, cursor: 'pointer',
+                opacity: saving ? 0.5 : 1,
+                transition: 'all 0.2s',
+                width: 140
+              }}
+            >
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: c.hex, boxShadow: `0 4px 12px ${c.hex}66` }}></div>
+              <span style={{ fontSize: 13, color: 'var(--text-main)', fontWeight: isActive ? 700 : 500 }}>{c.name}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <h3 style={{ fontSize: 16, color: colors.gold, marginTop: 32, marginBottom: 16, borderBottom: '1px solid ' + colors.border, paddingBottom: 8 }}>Özel Renk Oluştur</h3>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <input 
+          type="color" 
+          value={customColor} 
+          onChange={(e) => setCustomColor(e.target.value)} 
+          style={{ width: 48, height: 48, padding: 0, border: 'none', borderRadius: 8, cursor: 'pointer', background: 'transparent' }} 
+        />
+        <button 
+          onClick={() => handleSelectColor(customColor)}
+          disabled={saving}
+          className="admin-btn"
+          style={{ background: 'var(--surface-color)', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
+        >
+          {saving ? 'Kaydediliyor...' : 'Seçili Özel Rengi Uygula'}
+        </button>
+      </div>
+
+      <h3 style={{ fontSize: 16, color: colors.gold, marginTop: 40, marginBottom: 16, borderBottom: '1px solid ' + colors.border, paddingBottom: 8 }}>Arka Plan Deseni (Tema)</h3>
+      <p style={{ color: colors.textMuted, marginBottom: 24, fontSize: 14 }}>
+        Müşteri ekranının arka planına işletmenizin konseptine uygun hafif desenler ekleyebilirsiniz.
+      </p>
+
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        {THEME_BACKGROUNDS.map(bg => {
+          const isActive = settings?.bgThemeId === bg.id || (!settings?.bgThemeId && bg.id === 'default');
+          return (
+            <button 
+              key={bg.id}
+              disabled={saving}
+              onClick={() => handleSelectBg(bg.id)}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+                background: 'var(--surface-color)',
+                border: isActive ? `2px solid var(--accent-color)` : '2px solid var(--glass-border)',
+                borderRadius: 12, padding: 16, cursor: 'pointer',
+                opacity: saving ? 0.5 : 1,
+                transition: 'all 0.2s',
+                width: 140,
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+            >
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundImage: bg.bg, zIndex: 0 }}></div>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--bg-color)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, zIndex: 1, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                <i className={bg.icon} style={{ color: 'var(--text-muted)' }}></i>
+              </div>
+              <span style={{ fontSize: 13, color: 'var(--text-main)', fontWeight: isActive ? 700 : 500, zIndex: 1, textShadow: '0 0 10px var(--bg-color), 0 0 10px var(--bg-color)' }}>{bg.name}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <h3 style={{ fontSize: 16, color: colors.gold, marginTop: 40, marginBottom: 16, borderBottom: '1px solid ' + colors.border, paddingBottom: 8 }}>Özel Arka Plan Görseli Yükle (Premium Glass Efekti)</h3>
+      <p style={{ color: colors.textMuted, marginBottom: 24, fontSize: 14 }}>
+        Kendi görselinizi yükleyerek işletmenize tamamen özel bir arka plan oluşturabilirsiniz. Görselinizin üzerine otomatik olarak premium bir "glass" (buzlu cam) efekti uygulanacaktır.
+      </p>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <label className="admin-btn" style={{ background: 'var(--primary-color)', color: '#000', cursor: 'pointer', opacity: bgUploading ? 0.5 : 1 }}>
+          <i className="fa-solid fa-upload"></i> {bgUploading ? 'Yükleniyor...' : 'Görsel Seç ve Yükle'}
+          <input type="file" style={{ display: 'none' }} accept="image/*" onChange={handleCustomBgUpload} disabled={bgUploading} />
+        </label>
+        
+        {settings?.customBgImage && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <img src={settings.customBgImage} alt="Custom Bg" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '2px solid var(--glass-border)' }} />
+            <button onClick={() => handleSelectBg('default')} className="admin-btn" style={{ background: '#ef4444', color: '#fff' }}>Kaldır</button>
+          </div>
+        )}
       </div>
     </div>
   );

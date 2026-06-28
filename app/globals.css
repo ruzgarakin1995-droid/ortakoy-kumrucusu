@@ -21,6 +21,8 @@
 
 body {
   background-color: var(--bg-color);
+  background-image: var(--theme-bg-pattern, none);
+  background-attachment: fixed;
   color: var(--text-main);
   line-height: 1.5;
   padding-bottom: 80px; /* Space for scroll */
