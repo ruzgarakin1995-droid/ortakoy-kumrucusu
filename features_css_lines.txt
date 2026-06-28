@@ -1,0 +1,337 @@
+3: --bg-color: #0d0d0d;
+4: --surface-color: #1a1a1a;
+5: --surface-color-light: #262626;
+6: --primary-color: #d4af37; /* Premium Gold */
+7: --accent-color: #fde047; /* Light Yellow */
+11: --glass-bg: rgba(26, 26, 26, 0.6);
+12: --glass-border: rgba(255, 255, 255, 0.08);
+29: --glass-input-focus: var(--glass-input-focus);
+31: --theme-btn-color: var(--text-main);
+36: --bg-color: #f4f4f5;
+37: --surface-color: #ffffff;
+38: --surface-color-light: #e4e4e7;
+39: --primary-color: #b48c26; /* Darker Gold for contrast */
+40: --accent-color: #eab308;
+43: --glass-bg: rgba(255, 255, 255, 0.8);
+44: --glass-border: rgba(0, 0, 0, 0.08);
+60: --glass-input-focus: rgba(255, 255, 255, 0.8);
+62: --theme-btn-color: #18181b;
+70: -webkit-tap-highlight-color: transparent;
+74: background-color: var(--bg-color);
+77: color: var(--text-main);
+96: background: linear-gradient(180deg, rgba(212, 175, 55, 0.1) 0%, var(--bg-color) 100%);
+102: background: linear-gradient(90deg, var(--primary-color), var(--text-main));
+104: -webkit-text-fill-color: transparent;
+109: color: var(--primary-color);
+123: background: var(--surface-color);
+128: border: 1px solid var(--glass-border);
+135: color: var(--primary-color);
+143: background: var(--glass-bg);
+147: border-bottom: 1px solid var(--glass-border);
+153: background: var(--surface-color);
+154: border: 1px solid var(--glass-border);
+160: color: var(--text-muted);
+165: body.light-mode .premium-toast {
+176: -webkit-text-fill-color: transparent;
+184: color: #555;
+188: background: var(--accent-color);
+189: color: var(--accent-text, #000);
+190: border-color: var(--accent-color);
+196: color: var(--text-main);
+203: color: var(--text-muted);
+219: background: var(--surface-color-light);
+220: border: 1px solid var(--glass-border);
+221: color: var(--text-muted);
+234: background: var(--accent-color);
+235: color: var(--accent-text, #000);
+237: border-color: var(--accent-color);
+244: background: var(--glass-bg);
+248: border-bottom: 1px solid var(--glass-border);
+267: color: var(--text-muted);
+273: background: var(--surface-color-light);
+274: border: 1px solid var(--glass-border);
+279: background: var(--accent-color);
+280: color: var(--accent-text, #000);
+282: border-color: var(--accent-color);
+303: background: var(--surface-color);
+306: border: 1px solid var(--glass-border);
+320: background: var(--surface-color-light);
+325: background: var(--primary-color);
+350: background: linear-gradient(180deg, transparent 0%, var(--surface-color) 100%);
+357: background: var(--accent-color);
+358: color: var(--accent-text, #000);
+364: box-shadow: 0 4px 10px var(--glass-input-focus);
+381: color: var(--text-muted);
+394: color: var(--primary-color);
+398: background: var(--accent-color);
+399: color: var(--accent-text, #000);
+425: color: var(--primary-color);
+430: background: var(--surface-color);
+433: border: 1px solid var(--glass-border);
+461: color: var(--text-muted);
+474: color: var(--primary-color);
+478: background: var(--accent-color);
+479: color: var(--accent-text, #000);
+512: .tag-veg { background: rgba(30, 142, 62, 0.9); color: var(--text-main); }
+513: .tag-hot { background: rgba(217, 48, 37, 0.9); color: var(--text-main); }
+514: .tag-pop { background: rgba(242, 153, 0, 0.9); color: var(--text-main); }
+519: color: var(--text-muted);
+529: color: var(--text-muted);
+530: background: var(--surface-color-light);
+557: .allergen-icon.tahil { background: #fbbc04; color: #000; }
+558: .allergen-icon.sut { background: #9fa8da; color: var(--text-main); }
+559: .allergen-icon.sulfit { background: #00bcd4; color: var(--text-main); }
+560: .allergen-icon.soya { background: #34a853; color: var(--text-main); }
+561: .allergen-icon.fistik { background: #e07a5f; color: var(--text-main); }
+566: background: var(--surface-color);
+567: border: 1px solid var(--glass-border);
+614: color: var(--primary-color);
+618: background: var(--accent-color);
+619: color: var(--accent-text, #000);
+633: background: var(--surface-color);
+634: color: var(--text-main);
+639: border: 1px solid var(--glass-border);
+650: border-bottom: 1px solid var(--glass-border);
+654: color: var(--primary-color);
+662: border-bottom: 1px solid var(--glass-border);
+673: background: var(--surface-color-light);
+677: color: var(--primary-color);
+688: color: var(--text-muted);
+695: color: var(--text-main);
+704: border-bottom: 1px solid var(--glass-border);
+717: .delivery-logo.ys { color: #ea004b; }
+718: .delivery-logo.migros { color: #ff7d00; }
+719: .delivery-logo.getir { color: #5d3ebc; }
+727: border: 1px solid var(--glass-border);
+749: color: var(--text-muted);
+766: background: var(--surface-color);
+767: border: 1px solid var(--glass-border);
+786: color: var(--primary-color);
+790: color: #2ecc71;
+802: border-bottom: 1px solid var(--glass-border);
+803: color: var(--text-muted);
+814: color: var(--primary-color);
+819: background: linear-gradient(135deg, var(--surface-color) 0%, #2a2a2a 100%);
+820: border: 1px solid var(--glass-border);
+832: color: var(--primary-color);
+836: color: inherit;
+840: color: var(--text-muted);
+853: background: var(--surface-color);
+857: color: var(--text-main);
+859: border: 1px solid var(--glass-border);
+874: color: var(--text-main);
+880: .social-info p { font-size: 13px; color: var(--text-muted); }
+881: .social-arrow { color: var(--text-muted); }
+884: /* Toast Notification Component */
+885: .toast-container {
+889: background: var(--surface-color);
+890: border: 1px solid var(--primary-color);
+902: .toast-container.show {
+906: .toast-img {
+912: border: 1px solid var(--glass-border);
+915: .toast-content {
+919: .toast-content h4 {
+920: color: var(--primary-color);
+927: .toast-content p {
+928: color: var(--text-main);
+951: color: var(--text-main);
+960: .delivery-btn.getir { background: #5d3ebc; color: #ffd300; }
+975: background: var(--surface-color);
+976: border: 1px solid var(--glass-border);
+996: background: var(--accent-color);
+997: color: var(--accent-text, #000);
+1011: color: var(--text-main);
+1016: color: var(--text-muted);
+1033: color: var(--primary-color);
+1036: background: var(--accent-color);
+1037: color: var(--accent-text, #000);
+1066: color: white;
+1072: box-shadow: 0 4px 15px var(--glass-input-focus);
+1090: color: #b87a00;
+1138: background: var(--surface-color);
+1143: box-shadow: 0 -10px 40px var(--glass-input-focus);
+1168: color: #111;
+1175: color: #999;
+1177: transition: color 0.2s;
+1181: color: #333;
+1199: color: #b87a00;
+1206: color: #ff4d4f;
+1218: color: var(--primary-color);
+1223: color: var(--primary-color);
+1235: color: #ff4d4f;
+1242: color: #999;
+1254: color: #111;
+1259: color: #3ca2e0;
+1275: color: #333;
+1285: color: #555;
+1290: color: white;
+1291: border-color: #b87a00;
+1295: color: #4CAF50;
+1308: color: #333;
+1311: transition: border-color 0.2s;
+1315: border-color: #b87a00;
+1327: color: #e91e63;
+1341: color: white;
+1359: color: white;
+1387: color: white;
+1401: color: white;
+1414: .ing-tahil { background: #ffb703; color: #000; } /* Yellow */
+1431: color: transparent;
+1451: background: var(--surface-color);
+1480: color: var(--text-light);
+1497: color: var(--text-alpha-50);
+1514: background: var(--primary-color);
+1532: background: var(--primary-color);
+1558: color: var(--text-main);
+1561: transition: border-color 0.3s, box-shadow 0.3s;
+1570: border-color: var(--primary-color) !important;
+1578: color: var(--text-alpha-50);
+1587: color: var(--primary-color);
+1592: color: var(--text-alpha-70);
+1604: color: var(--text-alpha-70) !important;
+1622: border-color: var(--primary-color) !important;
+1623: color: var(--primary-color) !important;
+1628: background: linear-gradient(135deg, var(--primary-color) 0%, #FFA000 100%);
+1629: color: #111;
+1690: background: var(--surface-color);
+1695: color: var(--text-main);
+1730: color: var(--primary-color);
+1742: color: var(--text-alpha-40);
+1770: background: var(--surface-color);
+1796: color: var(--text-main);
+1801: color: var(--text-alpha-50);
+1824: color: var(--text-main);
+1843: background-color: var(--bg-alpha-10);
+1854: background-color: var(--text-main);
+1859: background-color: #4caf50;
+1972: color: var(--text-main) !important;
+1975: color: var(--text-main) !important;
+1985: background: var(--surface-color);
+1986: border: 1px solid var(--glass-border);
+1987: color: var(--primary-color);
+2000: background: var(--primary-color);
+2001: color: var(--bg-color);
+2026: background: var(--surface-color);
+2027: border: 1px solid var(--primary-color);
+2043: color: var(--primary-color);
+2049: color: var(--text-muted);
+2059: border: 1px solid var(--glass-border);
+2060: background: var(--bg-color);
+2061: color: var(--text-main);
+2065: transition: border-color 0.3s ease;
+2069: border-color: var(--primary-color);
+2089: background: var(--primary-color);
+2090: color: var(--bg-color);
+2099: color: var(--text-main);
+2100: border: 1px solid var(--glass-border);
+2113: border-top: 1px dashed var(--glass-border);
+2114: border-bottom: 1px dashed var(--glass-border);
+2119: background: var(--bg-color);
+2120: border: 1px solid var(--glass-border);
+2121: color: var(--text-main);
+2130: border-color: var(--primary-color);
+2134: background: var(--surface-color-light);
+2135: color: var(--primary-color);
+2136: border: 1px solid var(--primary-color);
+2145: background: var(--primary-color);
+2146: color: var(--bg-color);
+2152: color: #4caf50;
+2185: background: var(--glass-border);
+2190: background: var(--primary-color);
+2197: background: var(--surface-color-light);
+2198: border: 2px solid var(--glass-border);
+2208: background: var(--primary-color);
+2209: border-color: var(--primary-color);
+2210: color: var(--bg-color);
+2214: border-color: var(--primary-color);
+2215: color: var(--primary-color);
+2227: color: var(--text-main);
+2232: color: var(--text-muted);
+2247: -webkit-text-fill-color: transparent;
+2265: .status-received { background: rgba(33, 150, 243, 0.1); color: #2196F3; border: 1px solid rgba(33, 150, 243, 0.2); }
+2266: .status-preparing { background: rgba(255, 152, 0, 0.1); color: #FF9800; border: 1px solid rgba(255, 152, 0, 0.2); }
+2267: .status-courier { background: rgba(156, 39, 176, 0.1); color: #9C27B0; border: 1px solid rgba(156, 39, 176, 0.2); }
+2268: .status-onway { background: rgba(3, 169, 244, 0.1); color: #03A9F4; border: 1px solid rgba(3, 169, 244, 0.2); }
+2269: .status-delivered { background: rgba(76, 175, 80, 0.1); color: #4CAF50; border: 1px solid rgba(76, 175, 80, 0.2); }
+2275: background-color: #f44336;
+2285: .admin-profile-btn { background: var(--bg-alpha-10); border: 1px solid var(--primary-color); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 1.2rem; cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(5px); } .admin-profile-btn:hover { background: var(--primary-color); color: #000; transform: scale(1.1); }
+2304: color: var(--primary-color) !important;
+2314: background: var(--primary-color);
+2315: color: var(--bg-color);
+2330: color: var(--text-main);
+2336: border: 1px solid var(--glass-border);
+2349: border-top: 1px dashed var(--glass-border);
+2350: border-bottom: 1px dashed var(--glass-border);
+2355: background: var(--bg-color);
+2356: border: 1px solid var(--glass-border);
+2357: color: var(--text-main);
+2366: border-color: var(--primary-color);
+2370: background: var(--surface-color-light);
+2371: color: var(--primary-color);
+2372: border: 1px solid var(--primary-color);
+2381: background: var(--primary-color);
+2382: color: var(--bg-color);
+2388: color: #4caf50;
+2421: background: var(--glass-border);
+2426: background: var(--primary-color);
+2433: background: var(--surface-color-light);
+2434: border: 2px solid var(--glass-border);
+2444: background: var(--primary-color);
+2445: border-color: var(--primary-color);
+2446: color: var(--bg-color);
+2450: border-color: var(--primary-color);
+2451: color: var(--primary-color);
+2463: color: var(--text-main);
+2468: color: var(--text-muted);
+2478: /* Premium Toast */
+2479: .premium-toast {
+2484: background: var(--surface-color);
+2487: border: 1px solid var(--glass-border);
+2488: border-left: 4px solid var(--primary-color);
+2498: .premium-toast.show {
+2501: .toast-header {
+2505: color: var(--text-main);
+2509: .toast-body {
+2514: .toast-img {
+2519: border: 1px solid var(--glass-border);
+2522: .toast-img img {
+2527: .toast-img-placeholder {
+2531: background: var(--surface-color-light);
+2535: color: var(--primary-color);
+2538: border: 1px solid var(--glass-border);
+2540: .toast-content {
+2546: .toast-item-title {
+2549: color: var(--primary-color);
+2551: .toast-msg {
+2553: color: var(--text-muted);
+2557: .toast-footer {
+2563: .toast-price {
+2566: color: var(--text-main);
+2568: .btn-toast-add {
+2569: background: var(--accent-color);
+2570: color: var(--accent-text, #000);
+2579: .btn-toast-add:hover {
+2581: background: var(--primary-color);
+2583: .toast-close {
+2587: color: var(--text-alpha-40);
+2590: transition: color 0.3s;
+2592: .toast-close:hover {
+2593: color: var(--text-main);
+2614: border: 1px solid var(--fab-color);
+2621: box-shadow: 0 0 20px var(--glass-input-focus), 0 0 15px var(--fab-color);
+2639: background: var(--fab-color);
+2640: color: var(--text-main);
+2646: box-shadow: 0 0 10px var(--fab-color);
+2651: color: var(--text-main);
+2665: 0% { box-shadow: 0 0 20px var(--glass-input-focus), 0 0 5px var(--fab-color); }
+2666: 100% { box-shadow: 0 0 20px var(--glass-input-focus), 0 0 20px var(--fab-color); }
+2713: background: linear-gradient(to bottom, var(--primary-color) 0%, rgba(212, 175, 55, 0.1) 100%);
+2728: background: var(--primary-color);
+2729: color: #000;
+2731: border-color: var(--primary-color);
+2736: border-color: var(--primary-color);
+2737: color: var(--primary-color);
+2751: transition: color 0.3s;
+2755: color: var(--primary-color);
+2793: background-color: rgba(212, 175, 55, 0.8);
+2797: scrollbar-color: rgba(212, 175, 55, 0.6) var(--bg-alpha-02);

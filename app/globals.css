@@ -2871,3 +2871,26 @@ body.light-mode .nav-item.active {
   font-weight: 700;
   border-color: var(--accent-color);
 }
+
+
+/* LIGHT MODE EXTRA REFINEMENTS */
+body.light-mode .search-filter-section {
+  background: var(--glass-bg);
+}
+
+body.light-mode .toast-header,
+body.light-mode .toast-price {
+  color: var(--text-main);
+}
+
+body.light-mode .toast-close {
+  color: var(--text-muted);
+}
+
+body.light-mode .toast-close:hover {
+  color: var(--text-main);
+}
+
+body.light-mode .search-bar {
+  background: var(--surface-color);
+}

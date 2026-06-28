@@ -1,0 +1,4 @@
+423: if (settings?.themeColor) {
+424: const hex = settings.themeColor.replace('#', '');
+447: if (!settings?.themeColor && bgPattern === 'none' && !settings?.customBgImage) return null;
+453: ${settings?.themeColor ? `--accent-color: ${settings.themeColor} !important; --accent-text: ${textColor} !important;` : ''}

@@ -61,7 +61,7 @@ export default function LanguageSelector() {
       {isOpen && (
         <div style={{
           position: 'absolute', top: '100%', right: 0, marginTop: '8px',
-          background: 'rgba(25, 25, 25, 0.95)', border: '1px solid var(--glass-border)',
+          background: 'var(--surface-color)', border: '1px solid var(--glass-border)',
           borderRadius: '12px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px',
           zIndex: 9999, backdropFilter: 'blur(10px)', minWidth: '130px',
           boxShadow: '0 4px 15px rgba(0,0,0,0.5)'
@@ -71,13 +71,13 @@ export default function LanguageSelector() {
               key={lang.code}
               onClick={() => handleLanguageChange(lang.code)}
               style={{
-                background: 'transparent', border: 'none', color: currentLang === lang.code ? 'var(--primary-color)' : '#fff',
+                background: 'transparent', border: 'none', color: currentLang === lang.code ? 'var(--primary-color)' : 'var(--text-main)',
                 padding: '8px 12px', textAlign: 'left', borderRadius: '8px', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px',
                 fontWeight: currentLang === lang.code ? '700' : '500',
                 transition: 'background 0.2s'
               }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-alpha-10)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               <img src={lang.flagUrl} alt={lang.name} style={{ width: '20px', height: 'auto', borderRadius: '2px' }} /> 

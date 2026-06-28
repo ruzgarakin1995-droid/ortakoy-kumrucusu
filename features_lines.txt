@@ -1,0 +1,138 @@
+6: const toastMessages = [
+49: // Toast Logic
+50: const [toast, setToast] = useState(null);
+60: const randomMsg = toastMessages[Math.floor(Math.random() * toastMessages.length)];
+61: setToast({
+68: setTimeout(() => setToast(null), 8000);
+320: case 'received': return { text: "Siparişiniz Alındı 🕒", icon: "fa-clipboard-check", color: "var(--primary-color)" };
+321: case 'preparing': return { text: "Siparişiniz Hazırlanıyor 👨‍🍳", icon: "fa-fire-burner", color: "#FF9800" };
+322: case 'courier': return { text: "Kuryeye Veriliyor 🛵", icon: "fa-box", color: "#9C27B0" };
+323: case 'onway': return { text: "Tatlı Tatlı Geliyor 🚀", icon: "fa-motorcycle", color: "#03A9F4" };
+324: case 'delivered': return { text: "Afiyet Olsun! ✅", icon: "fa-check-circle", color: "#4CAF50" };
+325: default: return { text: "Sipariş Takip", icon: "fa-location-crosshairs", color: "var(--primary-color)" };
+422: let textColor = '#ffffff';
+423: if (settings?.themeColor) {
+424: const hex = settings.themeColor.replace('#', '');
+429: textColor = brightness > 128 ? '#000000' : '#ffffff';
+447: if (!settings?.themeColor && bgPattern === 'none' && !settings?.customBgImage) return null;
+453: ${settings?.themeColor ? `--accent-color: ${settings.themeColor} !important; --accent-text: ${textColor} !important;` : ''}
+460: <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: -1, backdropFilter: 'blur(24px) saturate(150%)', backgroundColor: 'var(--bg-alpha-50)', WebkitBackdropFilter: 'blur(24px) saturate(150%)' }}></div>
+469: <button onClick={toggleTheme} style={{ background: 'var(--theme-btn-bg)', border: '1px solid var(--glass-border)', color: 'var(--theme-btn-color)', padding: '8px', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s' }}>
+478: <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--primary-color)', boxShadow: '0 4px 15px var(--glass-input-focus)', position: 'relative' }}>
+496: <i className="fa-solid fa-magnifying-glass"></i>
+673: <a href={settings?.socialLinks?.googleReview || '#'} target="_blank" rel="noreferrer" className="contact-card" style={{ display: 'block', textDecoration: 'none', color: 'inherit', marginBottom: '16px', textAlign: 'center', padding: '24px', background: 'var(--surface-color)', borderRadius: '12px', transition: 'transform 0.2s' }}>
+674: <h3 className="animate-discount" style={{ fontSize: '16px', marginBottom: '12px', color: 'var(--text-main)' }}><span className="gift-icon">🎁</span> Google yorumu yap, %10 İndirim Kazan!</h3>
+675: <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '24px', color: '#fbbc05', marginBottom: '8px' }}>
+682: <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Yıldıza tıklayarak Google'da bizi puanlayın ve kasada gösterin anında indirimi kapın.</p>
+685: <a href={settings?.socialLinks?.instagram || '#'} className="social-link-item" style={{ borderRadius: '16px 16px 0 0', textDecoration: 'none', color: 'inherit', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)', padding: '16px', border: '1px solid var(--glass-border)' }}>
+687: <div className="social-icon instagram" style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)', background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' }}>
+692: <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Süreci yakından takip edin.</p>
+695: <div className="social-arrow" style={{ color: 'var(--text-muted)' }}><i className="fa-solid fa-arrow-right"></i></div>
+698: <a href={settings?.socialLinks?.whatsapp ? `https://wa.me/${settings.socialLinks.whatsapp.replace(/[^0-9]/g, '')}` : '#'} className="social-link-item" style={{ borderTop: 'none', borderBottom: 'none', textDecoration: 'none', color: 'inherit', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)', padding: '16px', borderLeft: '1px solid var(--glass-border)', borderRight: '1px solid var(--glass-border)' }}>
+700: <div className="social-icon whatsapp" style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)', background: '#25d366' }}>
+705: <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Hızlı sipariş ve destek için bir mesaj uzağınızdayız.</p>
+708: <div className="social-arrow" style={{ color: 'var(--text-muted)' }}><i className="fa-solid fa-arrow-right"></i></div>
+711: <a href={settings?.socialLinks?.googleReview || '#'} className="social-link-item" style={{ borderRadius: '0 0 16px 16px', textDecoration: 'none', color: 'inherit', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)', padding: '16px', border: '1px solid var(--glass-border)' }}>
+713: <div className="social-icon google" style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)', background: '#ea4335' }}>
+718: <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Yorumlarınız bizim için çok önemli.</p>
+721: <div className="social-arrow" style={{ color: 'var(--text-muted)' }}><i className="fa-solid fa-arrow-right"></i></div>
+726: <div className="contact-card" style={{ background: 'var(--surface-color)', color: 'var(--text-main)', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+728: <i className="fa-solid fa-grip" style={{ color: 'var(--text-muted)' }}></i> İletişim
+731: <div className="contact-row" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 0', borderBottom: '1px solid var(--glass-border)' }}>
+732: <div className="contact-icon-box" style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-alpha-05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+736: <div className="contact-label" style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Telefon</div>
+737: <a href="tel:05325244906" className="contact-value" style={{ fontSize: '15px', fontWeight: 600, color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color='var(--primary-color)'} onMouseOut={(e) => e.target.style.color='inherit'}>0532 524 49 06</a>
+741: <div className="contact-row" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 0', borderBottom: '1px solid var(--glass-border)' }}>
+742: <div className="contact-icon-box" style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-alpha-05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+746: <div className="contact-label" style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>WhatsApp</div>
+747: <a href={"https://wa.me/" + (settings?.socialLinks?.whatsapp?.replace(/[^0-9]/g, '') || "905325244906")} target="_blank" rel="noreferrer" className="contact-value" style={{ fontSize: '15px', fontWeight: 600, color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color='#25D366'} onMouseOut={(e) => e.target.style.color='inherit'}>0532 524 49 06</a>
+751: <div className="contact-row" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 0', borderBottom: '1px solid var(--glass-border)', marginBottom: '24px' }}>
+752: <div className="contact-icon-box" style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-alpha-05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+756: <div className="contact-label" style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>E-posta</div>
+757: <a href="mailto:info@catiocakbasi.com" className="contact-value" style={{ fontSize: '15px', fontWeight: 600, color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color='var(--primary-color)'} onMouseOut={(e) => e.target.style.color='inherit'}>info@catiocakbasi.com</a>
+765: <div style={{ textAlign: 'center', color: '#ea004b', fontSize: '24px', fontWeight: 800 }}><i className="fa-solid fa-motorcycle" style={{ marginRight: 8 }}></i> Yemeksepeti</div>
+768: <div style={{ textAlign: 'center', color: '#ea004b', fontSize: '24px', fontWeight: 800 }}><i className="fa-solid fa-motorcycle" style={{ marginRight: 8 }}></i> Yemeksepeti</div>
+771: <div style={{ height: '1px', background: 'var(--glass-border)' }}></div>
+775: <div style={{ textAlign: 'center', color: '#ff7c00', fontSize: '24px', fontWeight: 800 }}><i className="fa-solid fa-motorcycle" style={{ marginRight: 8 }}></i> Migros Yemek</div>
+778: <div style={{ textAlign: 'center', color: '#ff7c00', fontSize: '24px', fontWeight: 800 }}><i className="fa-solid fa-motorcycle" style={{ marginRight: 8 }}></i> Migros Yemek</div>
+781: <div style={{ height: '1px', background: 'var(--glass-border)' }}></div>
+785: <div style={{ textAlign: 'center', color: '#5d3ebc', fontSize: '24px', fontWeight: 800 }}><i className="fa-solid fa-motorcycle" style={{ marginRight: 8 }}></i> Getir Yemek</div>
+788: <div style={{ textAlign: 'center', color: '#5d3ebc', fontSize: '24px', fontWeight: 800 }}><i className="fa-solid fa-motorcycle" style={{ marginRight: 8 }}></i> Getir Yemek</div>
+791: <div style={{ height: '1px', background: 'var(--glass-border)' }}></div>
+795: <div style={{ textAlign: 'center', color: '#F27A1A', fontSize: '24px', fontWeight: 800 }}><i className="fa-solid fa-motorcycle" style={{ marginRight: 8 }}></i> Trendyol Go</div>
+798: <div style={{ textAlign: 'center', color: '#F27A1A', fontSize: '24px', fontWeight: 800 }}><i className="fa-solid fa-motorcycle" style={{ marginRight: 8 }}></i> Trendyol Go</div>
+815: <a href="https://www.google.com/maps/dir/?api=1&destination=Cumhuriyet,+Tayyareci+Fehmi+Sok.+No:25/1,+34360+Şişli/İstanbul" target="_blank" rel="noreferrer" className="map-link-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'var(--text-main)', transition: 'transform 0.2s' }}>
+826: <a href="https://yandex.com.tr/harita/?text=Cumhuriyet,+Tayyareci+Fehmi+Sok.+No:25/1,+34360+Şişli/İstanbul" target="_blank" rel="noreferrer" className="map-link-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'var(--text-main)', transition: 'transform 0.2s' }}>
+835: <a href="http://maps.apple.com/?daddr=Cumhuriyet,+Tayyareci+Fehmi+Sok.+No:25/1,+34360+Şişli/İstanbul&dirflg=d" target="_blank" rel="noreferrer" className="map-link-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'var(--text-main)', transition: 'transform 0.2s' }}>
+881: <button onClick={() => { setCheckoutStep(1); setCheckoutError(''); }} style={{ background: 'none', border: 'none', color: 'var(--primary-color)', position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', fontWeight: 'bold' }}>
+912: <span style={{ color: 'var(--primary-color)', marginRight: '6px' }}>1x</span>
+917: <button className="btn-edit-item" onClick={() => openEditModal(index)} style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)', color: 'var(--primary-color)', padding: '6px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}>
+921: <div className="cart-item-price" style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>
+923: <i className="fa-solid fa-xmark remove-item" onClick={() => removeFromCart(item.cartId)} style={{ cursor: 'pointer', marginLeft: '10px', color: 'var(--text-alpha-50)' }}></i>
+928: <div className="cart-item-notes" style={{ width: '100%', fontSize: '11px', color: 'var(--text-alpha-40)', fontStyle: 'italic', marginTop: '4px' }}>
+933: <div className="cart-item-notes" style={{ width: '100%', fontSize: '11px', color: 'var(--primary-color)', fontStyle: 'italic', marginTop: '4px' }}>
+943: <i className="fa-solid fa-basket-shopping" style={{ fontSize: '2.5rem', color: 'var(--bg-alpha-20)', marginBottom: '10px' }}></i>
+944: <p style={{ fontSize: '14px', margin: 0, color: 'var(--text-alpha-50)' }}>Sepetiniz boş.</p>
+956: <div className="delivery-notice compact-notice" style={{ padding: '12px', borderRadius: '8px', background: cartTotal >= threshold ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 193, 7, 0.1)', color: cartTotal >= threshold ? '#4caf50' : 'var(--primary-color)', textAlign: 'center', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
+958: {cartTotal < threshold && <span style={{ fontSize: '13px', color: '#999', fontStyle: 'italic', fontWeight: '500' }}>Ortalama kurye ücretimiz: {courierFee} ₺'dir.</span>}
+968: }} style={{ width: '100%', padding: '14px', borderRadius: '8px', background: 'var(--primary-color)', color: '#000', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+979: width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--bg-alpha-10); background: var(--bg-alpha-03); color: var(--text-main); font-family: 'Outfit', sans-serif; font-size: 14px; outline: none; transition: all 0.3s;
+981: .premium-input::placeholder { color: var(--text-muted); }
+983: border-color: var(--primary-color); background: var(--glass-input-focus); box-shadow: 0 0 0 4px rgba(212,175,55,0.1);
+986: flex: 1; padding: 16px; border-radius: 12px; border: 1px solid var(--bg-alpha-10); background: var(--bg-alpha-03); color: var(--text-muted); cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 12px; font-weight: 600; transition: all 0.3s; text-align: left;
+989: border-color: var(--primary-color); background: rgba(212,175,55,0.05); color: var(--primary-color); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(212,175,55,0.1);
+1011: <div style={{ marginBottom: '12px', color: 'var(--text-alpha-50)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Ödeme Yöntemi</div>
+1014: <i className="fa-solid fa-money-bill-wave" style={{ color: '#2ecc71', fontSize: '22px' }}></i>
+1018: <i className="fa-solid fa-credit-card" style={{ color: '#3498db', fontSize: '22px' }}></i>
+1026: <i className="fa-solid fa-ticket" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary-color)' }}></i>
+1036: <button className="btn-apply-coupon" onClick={handleApplyCoupon} style={{ padding: '0 24px', borderRadius: '12px', border: '1px solid var(--primary-color)', background: 'linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.2))', color: 'var(--primary-color)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s' }}>
+1040: {couponError && <div style={{ color: '#ff6b6b', fontSize: '13px', marginBottom: '12px', paddingLeft: '4px' }}><i className="fa-solid fa-circle-exclamation"></i> {couponError}</div>}
+1042: <div className="discount-row" style={{ display: 'flex', justifyContent: 'space-between', color: '#2ecc71', marginBottom: '12px', fontWeight: 'bold', background: 'rgba(46, 204, 113, 0.1)', padding: '12px 16px', borderRadius: '8px' }}>
+1049: <span style={{ fontSize: '16px', color: 'var(--text-alpha-70)', fontWeight: 600 }}>Genel Toplam</span>
+1050: <strong style={{ color: 'var(--primary-color)', fontSize: '28px', textShadow: '0 2px 10px rgba(212,175,55,0.3)' }}>{finalTotal} ₺</strong>
+1054: <div style={{ background: 'rgba(255, 107, 107, 0.1)', border: '1px solid rgba(255, 107, 107, 0.3)', color: '#ff6b6b', padding: '14px 16px', borderRadius: '12px', marginBottom: '16px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px', animation: 'fadeIn 0.3s ease' }}>
+1072: style={{ width: '100%', padding: '18px', borderRadius: '14px', background: 'linear-gradient(135deg, var(--primary-color), #f9d423)', color: '#000', fontWeight: 'bold', fontSize: '16px', border: 'none', cursor: 'pointer', boxShadow: '0 6px 20px rgba(212,175,55,0.3)', transition: 'all 0.3s' }}
+1084: <div className="edit-item-sheet" style={{ background: 'var(--surface-color)', padding: '20px', borderRadius: '16px', width: '90%', maxWidth: '350px', border: '1px solid var(--glass-border)' }}>
+1086: <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '18px' }}>
+1089: <i className="fa-solid fa-xmark close-edit" onClick={() => setIsEditOpen(false)} style={{ cursor: 'pointer', fontSize: '20px', color: 'var(--text-alpha-50)' }}></i>
+1105: style={{ accentColor: 'var(--primary-color)', width: '20px', height: '20px', cursor: 'pointer' }}
+1120: <span className="slider" style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: tempExcluded.includes(ing) ? '#ccc' : '#4caf50', borderRadius: '20px', transition: '.4s' }}>
+1121: <span style={{ position: 'absolute', height: '16px', width: '16px', left: tempExcluded.includes(ing) ? '2px' : '22px', bottom: '2px', backgroundColor: 'white', borderRadius: '50%', transition: '.4s' }}></span>
+1129: <button className="btn-checkout-premium" onClick={saveEdit} style={{ width: '100%', padding: '12px', background: 'var(--primary-color)', color: '#000', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Kaydet</button>
+1154: <div style={{ fontWeight: 700, color: 'var(--primary-color)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+1159: <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', color: '#eee', alignItems: 'flex-start' }}>
+1162: {item.selectedDrink && <div style={{ color: '#3498db', fontSize: 12, marginTop: 2 }}><i className="fa-solid fa-bottle-droplet" style={{marginRight: 4}}></i>{item.selectedDrink}</div>}
+1163: {item.excludedIngredients && item.excludedIngredients.length > 0 && <div style={{ color: '#e74c3c', fontSize: 12, marginTop: 2 }}><i className="fa-solid fa-ban" style={{marginRight: 4}}></i>Çıkarılan: {item.excludedIngredients.join(', ')}</div>}
+1170: <span style={{ color: 'var(--text-muted)' }}>Ödeme Yöntemi:</span>
+1179: <span style={{ color: 'var(--text-muted)' }}>Kupon İndirimi{trackingOrder.couponCode ? ` (${trackingOrder.couponCode})` : ''}:</span>
+1180: <span style={{ color: '#2ecc71', fontWeight: 600 }}>-{trackingOrder.discount} TL</span>
+1184: <span style={{ color: 'var(--text-muted)' }}>Toplam Tutar:</span>
+1185: <span style={{ color: 'var(--primary-color)', fontWeight: 700, fontSize: 16 }}>{trackingOrder.totalAmount || trackingOrder.total} TL</span>
+1193: <h4 style={{ color: '#e74c3c', fontSize: 18, marginBottom: 8, fontWeight: 700 }}>Siparişiniz İptal Edildi</h4>
+1194: <p style={{ color: 'var(--text-main)', fontSize: 14, marginBottom: 16, lineHeight: 1.5 }}>Çok özür dileriz ama maalesef siparişiniz iptal oldu.</p>
+1197: <div style={{ color: '#e74c3c', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>İptal Notu:</div>
+1198: <div style={{ color: 'var(--text-muted)', fontSize: 13, fontStyle: 'italic' }}>{trackingOrder.statusHistory.find(h => h.status === 'cancelled').note}</div>
+1265: {loginError && <p style={{ color: '#f44336', margin: '-10px 0 15px 0', fontSize: '13px' }}>{loginError}</p>}
+1275: <div className="store-closed-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)', padding: '20px', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
+1276: <i className="fa-solid fa-store-slash" style={{ fontSize: 64, color: 'var(--primary-color)', marginBottom: 20 }}></i>
+1278: <p style={{ color: '#ccc', maxWidth: 450, lineHeight: 1.6, fontSize: '15px' }}>
+1287: <div className="tracking-fab" onClick={() => setIsTrackingOpen(true)} style={{ '--fab-color': fabData.color }}>
+1297: {/* PREMIUM TOAST */}
+1298: <div className={`premium-toast ${toast ? 'show' : ''}`}>
+1299: {toast && (
+1301: <i className="fa-solid fa-xmark toast-close" onClick={() => setToast(null)}></i>
+1302: <div className="toast-header">
+1303: <i className="fa-solid fa-bell" style={{ animation: 'ring 2s infinite', color: 'var(--primary-color)' }}></i>
+1307: <div className="toast-body">
+1308: {toast.image ? (
+1309: <div className="toast-img">
+1310: <Image src={toast.image} alt={toast.title} fill style={{ objectFit: 'cover' }} sizes="70px" />
+1313: <div className="toast-img-placeholder"><i className="fa-solid fa-utensils"></i></div>
+1316: <div className="toast-content">
+1317: <div className="toast-item-title">{toast.title}</div>
+1318: <div className="toast-msg">"{toast.msg}"</div>
+1319: <div className="toast-footer">
+1320: <span className="toast-price">{toast.price} ₺</span>
+1321: <button className="btn-toast-add" onClick={(e) => {
+1323: addToCart(toast.originalItem);
+1324: setToast(null);
