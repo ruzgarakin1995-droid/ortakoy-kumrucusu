@@ -659,7 +659,7 @@ export default function Home() {
           </div>
           <div>
             <h2 className="hero-subtitle" style={{ marginBottom: '4px' }}>Restoran</h2>
-            <h1 className="hero-title" style={{ fontSize: '24px' }}>Ortaköy Kumrucusu Osmanbey</h1>
+            <h1 className="hero-title" style={{ fontSize: '24px' }}>Ortaköy Kumrucusu</h1>
           </div>
         </div>
         <div className="container hero-info" style={{ marginTop: '16px' }}>
@@ -963,7 +963,7 @@ export default function Home() {
             </div>
             <div className="contact-info-text" style={{ display: 'flex', flexDirection: 'column' }}>
               <div className="contact-label" style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>E-posta</div>
-              <a href="mailto:info@catiocakbasi.com" className="contact-value" style={{ fontSize: '15px', fontWeight: 600, color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color='var(--primary-color)'} onMouseOut={(e) => e.target.style.color='inherit'}>info@catiocakbasi.com</a>
+              <a href="mailto:info@ortakoykumrucusu.com" className="contact-value" style={{ fontSize: '15px', fontWeight: 600, color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color='var(--primary-color)'} onMouseOut={(e) => e.target.style.color='inherit'}>info@catiocakbasi.com</a>
             </div>
           </div>
 
@@ -1011,7 +1011,7 @@ export default function Home() {
           {/* MAP */}
           <div className="map-container" style={{ marginTop: '24px', borderRadius: '12px', overflow: 'hidden', height: '250px', position: 'relative' }}>
             <iframe 
-              src="https://maps.google.com/maps?q=Cumhuriyet,+Tayyareci+Fehmi+Sok.+No:25/1,+34360+Şişli/İstanbul&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+              src="https://maps.google.com/maps?q=Ortaköy+Kumrucusu+Burhaniye&t=&z=16&ie=UTF8&iwloc=&output=embed" 
               style={{ width: '100%', height: '100%', border: 0, pointerEvents: 'auto' }}
               allowFullScreen="" 
               loading="lazy" 
@@ -1710,7 +1710,7 @@ export default function Home() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                   <div>
                     <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px' }}>{selectedItem.emoji} {selectedItem.title}</h2>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}><i className="fa-solid fa-location-dot"></i> Ortaköy Kumrucusu, Osmanbey</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}><i className="fa-solid fa-location-dot"></i> Ortaköy Kumrucusu, Burhaniye</div>
                   </div>
                   
                   {/* Quantity Selector */}
@@ -1784,8 +1784,8 @@ export default function Home() {
       </div>
 
       {/* MIN CART ALERT MODAL */}
-      <div className={`modal-overlay ${showMinCartAlert ? 'active' : ''}`} onClick={(e) => { if (e.target.className.includes('modal-overlay')) setShowMinCartAlert(false); }} style={{ zIndex: 10002 }}>
-        <div className={`modal-content ${showMinCartAlert ? 'open' : ''}`} style={{ maxWidth: '400px', textAlign: 'center', background: 'var(--surface-color)', borderRadius: '24px', padding: '32px 24px', border: '1px solid var(--glass-border)' }}>
+      <div className={`custom-modal-overlay ${showMinCartAlert ? 'active' : ''}`} onClick={(e) => { if (e.target.className.includes('custom-modal-overlay')) setShowMinCartAlert(false); }} style={{ zIndex: 10002 }}>
+        <div className={`custom-modal-content ${showMinCartAlert ? 'open' : ''}`} style={{ maxWidth: '400px', textAlign: 'center', background: 'var(--surface-color)', borderRadius: '24px', padding: '32px 24px', border: '1px solid var(--glass-border)' }}>
           <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(212, 175, 55, 0.1)', color: 'var(--primary-color)', fontSize: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <i className="fa-solid fa-basket-shopping"></i>
           </div>

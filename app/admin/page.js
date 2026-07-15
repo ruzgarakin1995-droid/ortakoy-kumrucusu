@@ -7,17 +7,17 @@ import { useRouter } from 'next/navigation';
 // STYLES
 // ============================================================
 const colors = {
-  bg: '#0d0d0d',
-  bgCard: 'rgba(255,255,255,0.04)',
-  bgCardHover: 'rgba(255,255,255,0.07)',
-  bgSidebar: 'rgba(13,13,13,0.97)',
-  gold: '#d4af37',
-  goldLight: '#e8c94a',
+  bg: 'var(--bg-color)',
+  bgCard: 'var(--bg-alpha-04)',
+  bgCardHover: 'var(--bg-alpha-07)',
+  bgSidebar: 'var(--glass-bg)',
+  gold: 'var(--primary-color)',
+  goldLight: 'var(--accent-color)',
   goldDark: '#b8961f',
-  text: '#f5f5f5',
-  textMuted: '#999',
-  textDim: '#666',
-  border: 'rgba(255,255,255,0.08)',
+  text: 'var(--text-main)',
+  textMuted: 'var(--text-muted)',
+  textDim: 'var(--text-alpha-50)',
+  border: 'var(--glass-border)',
   danger: '#e74c3c',
   dangerDark: '#c0392b',
   success: '#27ae60',
@@ -78,6 +78,22 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('appTheme') || 'dark';
+    setTheme(savedTheme);
+    if (savedTheme === 'light') document.body.classList.add('light-mode');
+    else document.body.classList.remove('light-mode');
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('appTheme', newTheme);
+    if (newTheme === 'light') document.body.classList.add('light-mode');
+    else document.body.classList.remove('light-mode');
+  };
 
   // Data states
   const [banners, setBanners] = useState([]);
@@ -88,19 +104,30 @@ export default function AdminPage() {
   const [settings, setSettings] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [reminders, setReminders] = useState([]);
-  const [waiterRequests, setWaiterRequests] = useState([]);
-  const [notifPermission, setNotifPermission] = useState('default');
-  const [toastMsg, setToastMsg] = useState(null);
   const [activeReminders, setActiveReminders] = useState([]);
   const [orderCount, setOrderCount] = useState(0);
+  const [waiterRequests, setWaiterRequests] = useState([]);
 
-  // Order alarm
+  // Order alarm & notifications
   const prevOrderCountRef = useRef(0);
   const prevWaiterCountRef = useRef(0);
-  const alarmAudioRef = useRef(null);
+  const [adminToast, setAdminToast] = useState(null);
+  const [notifPermission, setNotifPermission] = useState('granted');
+  const sharedAudioCtxRef = useRef(null);
 
-  // ---- AUTH ----
+  // ---- AUTH & INIT AUDIO ----
   useEffect(() => {
+    const initAudioOnInteraction = () => {
+      if (!sharedAudioCtxRef.current) {
+        sharedAudioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (sharedAudioCtxRef.current.state === 'suspended') {
+        sharedAudioCtxRef.current.resume();
+      }
+    };
+    window.addEventListener('click', initAudioOnInteraction, { once: true });
+    window.addEventListener('touchstart', initAudioOnInteraction, { once: true });
+
     const token = getToken();
     if (!token) { router.replace('/'); return; }
     fetch('/api/auth', { method: 'GET', headers: { Authorization: `Bearer ${token}` } })
@@ -108,6 +135,11 @@ export default function AdminPage() {
       .then(() => setAuthed(true))
       .catch(() => { localStorage.removeItem('adminToken'); router.replace('/'); })
       .finally(() => setLoading(false));
+
+    return () => {
+      window.removeEventListener('click', initAudioOnInteraction);
+      window.removeEventListener('touchstart', initAudioOnInteraction);
+    };
   }, [router]);
 
   // ---- LOAD DATA ----
@@ -127,10 +159,18 @@ export default function AdminPage() {
     } catch {}
   }, []);
 
+  const loadWaiterRequests = useCallback(async () => {
+    try {
+      const data = await apiFetch('/api/waiter');
+      const sorted = [...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setWaiterRequests(sorted);
+    } catch {}
+  }, []);
+
   useEffect(() => {
     if (!authed) return;
-    loadBanners(); loadFeatured(); loadMenu(); loadCoupons(); loadOrders(); loadSettings(); loadExpenses(); loadReminders();
-  }, [authed, loadBanners, loadFeatured, loadMenu, loadCoupons, loadOrders, loadSettings, loadExpenses, loadReminders]);
+    loadBanners(); loadFeatured(); loadMenu(); loadCoupons(); loadOrders(); loadSettings(); loadExpenses(); loadReminders(); loadWaiterRequests();
+  }, [authed, loadBanners, loadFeatured, loadMenu, loadCoupons, loadOrders, loadSettings, loadExpenses, loadReminders, loadWaiterRequests]);
 
   // ---- REMINDER CHECKER ----
   useEffect(() => {
@@ -169,16 +209,7 @@ export default function AdminPage() {
     
     checkReminders();
     const interval = setInterval(checkReminders, 60000); // Check every minute
-
-    const fetchWaiter = async () => {
-      try {
-        const reqs = await apiFetch('/api/waiter');
-        setWaiterRequests(reqs.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)));
-      } catch(e) {}
-    };
-    fetchWaiter();
-    const wInterval = setInterval(fetchWaiter, 10000);
-    return () => { clearInterval(interval); clearInterval(wInterval); };
+    return () => clearInterval(interval);
   }, [authed, reminders]);
 
   async function dismissReminder(id) {
@@ -202,6 +233,18 @@ export default function AdminPage() {
         }
         prevOrderCountRef.current = sorted.length;
         setOrderCount(sorted.length);
+
+        // Check waiter requests
+        const waiterData = await apiFetch('/api/waiter');
+        const pendingWaiters = waiterData.filter(w => w.status === 'pending');
+        if (prevWaiterCountRef.current !== undefined && pendingWaiters.length > prevWaiterCountRef.current) {
+          // New waiter request
+          playWaiterAlarm();
+          sendWaiterNotification(waiterData.find(w => w.status === 'pending'));
+        }
+        prevWaiterCountRef.current = pendingWaiters.length;
+        setWaiterRequests(waiterData);
+
       } catch {}
     }, 5000);
     return () => clearInterval(interval);
@@ -214,15 +257,38 @@ export default function AdminPage() {
 
   // ---- PENDING ALARM (Every 2 mins) ----
   const pendingOrdersRef = useRef(0);
+  const pendingWaitersRef = useRef(0);
+
   useEffect(() => {
     pendingOrdersRef.current = orders.filter(o => o.status === 'received').length;
   }, [orders]);
+
+  useEffect(() => {
+    pendingWaitersRef.current = waiterRequests.filter(w => w.status === 'pending').length;
+  }, [waiterRequests]);
 
   useEffect(() => {
     if (!authed) return;
     const interval = setInterval(() => {
       if (pendingOrdersRef.current > 0) {
         playAlarm();
+        const msg = `Onayınızı bekleyen ${pendingOrdersRef.current} adet sipariş var.`;
+        setAdminToast({ title: '⚠️ Bekleyen Siparişler!', body: msg, type: 'order' });
+        setTimeout(() => setAdminToast(null), 8000);
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('⚠️ Bekleyen Siparişler Var!', { body: msg, icon: '/ortakoy-logo.png' });
+        }
+      }
+      if (pendingWaitersRef.current > 0) {
+        setTimeout(() => {
+          playWaiterAlarm();
+          const msg = `Bekleyen ${pendingWaitersRef.current} garson talebi var!`;
+          setAdminToast({ title: '🛎️ Bekleyen Garson Talebi!', body: msg, type: 'waiter' });
+          setTimeout(() => setAdminToast(null), 8000);
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('🛎️ Bekleyen Garson Talebi!', { body: msg, icon: '/ortakoy-logo.png' });
+          }
+        }, pendingOrdersRef.current > 0 ? 2000 : 0);
       }
     }, 120000); // 2 minutes
     return () => clearInterval(interval);
@@ -230,56 +296,92 @@ export default function AdminPage() {
 
   function playAlarm() {
     try {
-      if (!alarmAudioRef.current) {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      let ctx = sharedAudioCtxRef.current;
+      if (!ctx) {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        sharedAudioCtxRef.current = ctx;
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.5);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 1.5);
+    } catch (e) { console.error('Audio play error:', e); }
+  }
+
+  function playWaiterAlarm() {
+    try {
+      let ctx = sharedAudioCtxRef.current;
+      if (!ctx) {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        sharedAudioCtxRef.current = ctx;
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+
+      const playTone = (freq, time, duration) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, ctx.currentTime);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.5);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 1.5);
-      }
-    } catch {}
-  }
-
-  function showToast(msg) {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 4000);
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + time);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + time);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + time + duration);
+        osc.start(ctx.currentTime + time);
+        osc.stop(ctx.currentTime + time + duration);
+      };
+      playTone(659.25, 0, 0.4);   // E5
+      playTone(523.25, 0.4, 0.6); // C5
+    } catch (e) { console.error('Audio play error:', e); }
   }
 
   function sendNotification(order) {
-    showToast('🔔 Yeni Sipariş: ' + (order.totalAmount ? formatPrice(order.totalAmount) : ''));
+    const msg = `Sipariş #${order.id?.slice(-6) || ''} - ${formatPrice(order.totalAmount || 0)}`;
+    setAdminToast({ title: '🔔 Yeni Sipariş!', body: msg, type: 'order' });
+    setTimeout(() => setAdminToast(null), 8000);
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('🔔 Yeni Sipariş!', { body: `Sipariş #${order.id?.slice(-6) || ''} - ${formatPrice(order.totalAmount || 0)}`, icon: '/images/logo.png' });
+      new Notification('🔔 Yeni Sipariş!', { body: msg, icon: '/ortakoy-logo.png' });
+    }
+  }
+
+  function sendWaiterNotification(request) {
+    if (!request) return;
+    const msg = `Masa numarası: ${request.tableNo}`;
+    setAdminToast({ title: '🛎️ Yeni Garson Talebi!', body: msg, type: 'waiter' });
+    setTimeout(() => setAdminToast(null), 8000);
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('🛎️ Yeni Garson Talebi!', { body: msg, icon: '/ortakoy-logo.png' });
     }
   }
 
   // Request notification permission
   useEffect(() => {
-    if (authed && 'Notification' in window) {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
       setNotifPermission(Notification.permission);
-      if (Notification.permission === 'default') {
-        Notification.requestPermission().then(p => setNotifPermission(p));
-      }
     }
   }, [authed]);
 
-  useEffect(() => {
-    if (!authed) return;
-    const pendingWaiters = waiterRequests.filter(r => r.status === 'pending');
-    if (pendingWaiters.length > prevWaiterCountRef.current && prevWaiterCountRef.current > 0) {
-      playAlarm();
-      showToast('🔔 Yeni Garson Talebi!');
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('🔔 Yeni Garson Talebi!', { body: `Masa ${pendingWaiters[0]?.tableNo}`, icon: '/images/logo.png' });
+  async function requestNotificationPermission() {
+    if ('Notification' in window) {
+      const perm = await Notification.requestPermission();
+      setNotifPermission(perm);
+      if (perm === 'granted') {
+        if (!sharedAudioCtxRef.current) {
+          sharedAudioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (sharedAudioCtxRef.current.state === 'suspended') {
+          sharedAudioCtxRef.current.resume();
+        }
       }
     }
-    prevWaiterCountRef.current = pendingWaiters.length;
-  }, [waiterRequests, authed]);
+  }
 
   // ---- LOGOUT ----
   function handleLogout() {
@@ -291,20 +393,45 @@ export default function AdminPage() {
   if (loading) return <div style={{ background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ color: colors.gold, fontSize: 24, fontFamily: 'Outfit' }}>Yükleniyor...</div></div>;
   if (!authed) return null;
 
+  // ---- NOTIFICATION FORCE GATE ----
+  if (notifPermission !== 'granted' && typeof window !== 'undefined' && 'Notification' in window) {
+    return (
+      <div style={{ background: colors.bg, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, textAlign: 'center', fontFamily: "'Outfit', sans-serif" }}>
+        <div className="admin-card" style={{ maxWidth: 450, width: '100%', padding: 40, animation: 'fadeIn 0.5s ease', background: colors.cardBg, border: `1px solid ${colors.border}`, borderRadius: 24 }}>
+          <i className="fa-solid fa-bell-slash" style={{ fontSize: 56, color: colors.danger, marginBottom: 24 }}></i>
+          <h2 style={{ color: colors.text, marginBottom: 16, fontSize: 24, fontWeight: 600 }}>Bildirim İzni Zorunlu</h2>
+          <p style={{ color: colors.textMuted, marginBottom: 32, lineHeight: 1.6, fontSize: 16 }}>
+            Yeni siparişleri ve garson taleplerini <strong>anında sesli</strong> olarak duyabilmeniz için tarayıcı bildirimlerine izin vermeniz gerekmektedir. Aksi takdirde siparişleri kaçırabilirsiniz.
+          </p>
+          {notifPermission === 'denied' ? (
+            <div style={{ padding: 20, background: 'rgba(239,68,68,0.1)', color: colors.danger, borderRadius: 16, fontSize: 15, textAlign: 'left', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <strong style={{ display: 'block', marginBottom: 8 }}><i className="fa-solid fa-triangle-exclamation"></i> Erişim Reddedildi!</strong> 
+              Tarayıcınızın adres çubuğundaki <strong>kilit simgesine</strong> (veya sayfa ayarlarına) tıklayarak Bildirimleri <strong>"İzin Ver"</strong> olarak değiştirin ve sayfayı yenileyin.
+            </div>
+          ) : (
+            <button className="admin-btn admin-btn-gold" style={{ width: '100%', padding: '16px 24px', fontSize: 18 }} onClick={requestNotificationPermission}>
+              <i className="fa-solid fa-check"></i> Bildirimlere İzin Ver
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const newOrders = orders.filter(o => o.status === 'received').length;
   const activeOrders = orders.filter(o => o.status === 'preparing' || o.status === 'courier' || o.status === 'onway').length;
 
   const tabs = [
-    { id: 'design', icon: 'fa-solid fa-palette', label: '🎨 Tasarım Yönetimi' },
     { id: 'dashboard', icon: 'fa-solid fa-chart-pie', label: '📊 Dashboard' },
     { id: 'banners', icon: 'fa-solid fa-images', label: '🎠 Slider Bannerlar' },
     { id: 'featured', icon: 'fa-solid fa-star', label: '⭐ Süper Lezzetler' },
     { id: 'menu', icon: 'fa-solid fa-utensils', label: '🍽️ Menü Yönetimi' },
     { id: 'coupons', icon: 'fa-solid fa-ticket', label: '🎟️ Kupon Kodları' },
     { id: 'orders', icon: 'fa-solid fa-box', label: '📦 Siparişler', badge: newOrders, activeBadge: activeOrders },
-    { id: 'waiter', icon: 'fa-solid fa-bell-concierge', label: '🤵 Garson Talepleri', badge: waiterRequests.filter(r => r.status === 'pending').length },
+    { id: 'waiters', icon: 'fa-solid fa-bell-concierge', label: '🛎️ Garson Talepleri', badge: waiterRequests.filter(r => r.status === 'pending').length },
     { id: 'finance', icon: 'fa-solid fa-chart-line', label: '💰 Maliyet & Finans' },
     { id: 'settings', icon: 'fa-solid fa-store', label: '🏪 İşletme Ayarları' },
+    { id: 'design', icon: 'fa-solid fa-palette', label: '🎨 Tasarım Yönetimi' },
   ];
 
   return (
@@ -314,35 +441,35 @@ export default function AdminPage() {
         @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-        .admin-shimmer { background: linear-gradient(90deg, ${colors.gold} 0%, ${colors.goldLight} 40%, #fff 50%, ${colors.goldLight} 60%, ${colors.gold} 100%); background-size: 200% 100%; animation: shimmer 3s infinite linear; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .admin-shimmer { background: linear-gradient(90deg, ${colors.gold} 0%, ${colors.goldLight} 40%, var(--text-main) 50%, ${colors.goldLight} 60%, ${colors.gold} 100%); background-size: 200% 100%; animation: shimmer 3s infinite linear; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .admin-card { background: ${colors.bgCard}; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid ${colors.border}; border-radius: 16px; transition: all 0.3s ease; }
         .admin-card:hover { background: ${colors.bgCardHover}; border-color: rgba(212,175,55,0.2); }
         .admin-btn { padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 14px; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 8px; }
         .admin-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
         .admin-btn:active { transform: translateY(0); }
         .admin-btn-gold { background: linear-gradient(135deg, ${colors.gold}, ${colors.goldLight}); color: #000; }
-        .admin-btn-danger { background: ${colors.danger}; color: #fff; }
+        .admin-btn-danger { background: ${colors.danger}; color: var(--text-main); }
         .admin-btn-danger:hover { background: ${colors.dangerDark}; }
-        .admin-btn-ghost { background: rgba(255,255,255,0.06); color: ${colors.text}; border: 1px solid ${colors.border}; }
-        .admin-btn-ghost:hover { background: rgba(255,255,255,0.1); }
+        .admin-btn-ghost { background: var(--bg-alpha-06); color: ${colors.text}; border: 1px solid ${colors.border}; }
+        .admin-btn-ghost:hover { background: var(--bg-alpha-10); }
         .admin-btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 8px; }
-        .admin-input { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid ${colors.border}; border-radius: 10px; color: ${colors.text}; font-family: 'Outfit', sans-serif; font-size: 14px; outline: none; transition: border-color 0.25s; box-sizing: border-box; }
+        .admin-input { width: 100%; padding: 12px 16px; background: var(--bg-alpha-06); border: 1px solid ${colors.border}; border-radius: 10px; color: ${colors.text}; font-family: 'Outfit', sans-serif; font-size: 14px; outline: none; transition: border-color 0.25s; box-sizing: border-box; }
         .admin-input:focus { border-color: ${colors.gold}; }
         .admin-input::placeholder { color: ${colors.textDim}; }
-        .admin-select { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid ${colors.border}; border-radius: 10px; color: ${colors.text}; font-family: 'Outfit', sans-serif; font-size: 14px; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; }
-        .admin-select option { background: #1a1a1a; color: #fff; }
+        .admin-select { width: 100%; padding: 12px 16px; background: var(--bg-alpha-06); border: 1px solid ${colors.border}; border-radius: 10px; color: ${colors.text}; font-family: 'Outfit', sans-serif; font-size: 14px; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; }
+        .admin-select option { background: #1a1a1a; color: var(--text-main); }
         .admin-label { display: block; margin-bottom: 6px; font-size: 13px; color: ${colors.textMuted}; font-weight: 500; }
         .admin-pulse { width: 10px; height: 10px; border-radius: 50%; background: ${colors.danger}; animation: pulse 1.5s infinite; display: inline-block; }
         .admin-sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 998; }
         .admin-table { width: 100%; border-collapse: collapse; }
         .admin-table th, .admin-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid ${colors.border}; font-size: 14px; }
         .admin-table th { color: ${colors.textMuted}; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .admin-table tr:hover td { background: rgba(255,255,255,0.02); }
-        .admin-textarea { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid ${colors.border}; border-radius: 10px; color: ${colors.text}; font-family: 'Outfit', sans-serif; font-size: 14px; outline: none; resize: vertical; min-height: 80px; box-sizing: border-box; }
+        .admin-table tr:hover td { background: var(--bg-alpha-02); }
+        .admin-textarea { width: 100%; padding: 12px 16px; background: var(--bg-alpha-06); border: 1px solid ${colors.border}; border-radius: 10px; color: ${colors.text}; font-family: 'Outfit', sans-serif; font-size: 14px; outline: none; resize: vertical; min-height: 80px; box-sizing: border-box; }
         .admin-textarea:focus { border-color: ${colors.gold}; }
         .admin-checkbox { width: 18px; height: 18px; accent-color: ${colors.gold}; cursor: pointer; }
         .admin-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
-        .status-flow-btn { padding: 6px 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: rgba(255,255,255,0.04); color: ${colors.textMuted}; cursor: pointer; font-family: 'Outfit'; font-size: 11px; transition: all 0.2s; }
+        .status-flow-btn { padding: 6px 12px; border: 1px solid var(--bg-alpha-10); border-radius: 8px; background: var(--bg-alpha-04); color: ${colors.textMuted}; cursor: pointer; font-family: 'Outfit'; font-size: 11px; transition: all 0.2s; }
         .status-flow-btn:hover { background: rgba(255,255,255,0.08); }
         .status-flow-btn.active { border-color: ${colors.gold}; background: rgba(212,175,55,0.15); color: ${colors.gold}; }
         @media (max-width: 768px) {
@@ -372,13 +499,13 @@ export default function AdminPage() {
       {/* ===== REMINDERS POPUP ===== */}
       <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {activeReminders.map(r => (
-          <div key={r.id} style={{ background: '#2c3e50', borderLeft: '4px solid #f39c12', padding: 16, borderRadius: 8, boxShadow: '0 10px 25px rgba(0,0,0,0.5)', width: 320, animation: 'fadeIn 0.3s ease' }}>
+          <div key={r.id} style={{ background: '#2c3e50', borderLeft: '4px solid #f39c12', padding: 16, borderRadius: 8, boxShadow: '0 10px 25px var(--glass-input-focus)', width: 320, animation: 'fadeIn 0.3s ease' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ fontWeight: 600, color: '#f39c12', marginBottom: 4 }}><i className="fa-solid fa-bell admin-pulse"></i> Ödeme Hatırlatması</div>
-              <button onClick={() => dismissReminder(r.id)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.5 }}><i className="fa-solid fa-xmark"></i></button>
+              <button onClick={() => dismissReminder(r.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', opacity: 0.5 }}><i className="fa-solid fa-xmark"></i></button>
             </div>
             <div style={{ fontSize: 15, marginBottom: 4 }}>{r.title}</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 12 }}>Tutar: {formatPrice(r.amount)} | Son Ödeme: {new Date(r.dueDate).toLocaleDateString('tr-TR')}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-alpha-60)', marginBottom: 12 }}>Tutar: {formatPrice(r.amount)} | Son Ödeme: {new Date(r.dueDate).toLocaleDateString('tr-TR')}</div>
             <button onClick={() => { dismissReminder(r.id); setActiveTab('finance'); }} className="admin-btn admin-btn-sm" style={{ background: 'rgba(243, 156, 18, 0.2)', color: '#f39c12', width: '100%', justifyContent: 'center' }}>Finans Sekmesine Git</button>
           </div>
         ))}
@@ -395,7 +522,7 @@ export default function AdminPage() {
         )}
 
         {/* Header */}
-        <header style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(13,13,13,0.8)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <header style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', position: 'sticky', top: 0, zIndex: 50 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button className="admin-mobile-toggle" onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: colors.text, fontSize: 20, cursor: 'pointer', padding: 8 }}>
               <i className="fa-solid fa-bars"></i>
@@ -404,9 +531,14 @@ export default function AdminPage() {
               {tabs.find(t => t.id === activeTab)?.label || 'Admin'}
             </h1>
           </div>
-          <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={handleLogout}>
-            <i className="fa-solid fa-right-from-bracket"></i> Çıkış
-          </button>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <button onClick={toggleTheme} style={{ background: 'var(--theme-btn-bg)', border: '1px solid var(--glass-border)', color: 'var(--theme-btn-color)', padding: '6px', borderRadius: '50%', width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s' }}>
+              <i className={theme === 'dark' ? "fa-solid fa-sun" : "fa-solid fa-moon"}></i>
+            </button>
+            <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={handleLogout}>
+              <i className="fa-solid fa-right-from-bracket"></i> Çıkış
+            </button>
+          </div>
         </header>
 
         {/* Content */}
@@ -417,13 +549,90 @@ export default function AdminPage() {
           {activeTab === 'menu' && <MenuTab categories={categories} reload={loadMenu} />}
           {activeTab === 'coupons' && <CouponsTab coupons={coupons} reload={loadCoupons} />}
           {activeTab === 'orders' && <OrdersTab orders={orders} reload={loadOrders} />}
-          {activeTab === 'design' && <DesignTab settings={settings} reload={loadSettings} />}
-            {activeTab === 'settings' && <SettingsTab settings={settings} reload={loadSettings} />}
-          {activeTab === 'waiter' && <WaiterTab requests={waiterRequests} setWaiterRequests={setWaiterRequests} />}
+          {activeTab === 'waiters' && <WaitersTab requests={waiterRequests} reload={loadWaiterRequests} />}
+          {activeTab === 'settings' && <SettingsTab settings={settings} reload={loadSettings} />}
           {activeTab === 'finance' && <FinanceTab expenses={expenses} categories={categories} orders={orders} reloadExpenses={loadExpenses} reloadCategories={loadMenu} reminders={reminders} reloadReminders={loadReminders} />}
+          {activeTab === 'design' && <DesignTab settings={settings} reload={loadSettings} />}
         </div>
       </main>
+      <PremiumToast />
+      <AIChatAssistant reloadAll={() => { loadMenu(); loadSettings(); }} />
     </div>
+  );
+}
+
+// ============================================================
+// PREMIUM TOAST NOTIFICATION
+// ============================================================
+function PremiumToast() {
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    let timer;
+    const handleToast = (e) => {
+      setToast(e.detail);
+      clearTimeout(timer);
+      timer = setTimeout(() => setToast(null), 4000);
+    };
+    window.addEventListener('premium-toast', handleToast);
+    
+    // Override global alert for admin page
+    const originalAlert = window.alert;
+    window.alert = (msg) => {
+      const isError = msg.toLowerCase().includes('hata') || msg.toLowerCase().includes('başarısız') || msg.toLowerCase().includes('zorunlu');
+      const event = new CustomEvent('premium-toast', { detail: { message: msg, type: isError ? 'error' : 'success' } });
+      window.dispatchEvent(event);
+    };
+
+    return () => {
+      window.removeEventListener('premium-toast', handleToast);
+      window.alert = originalAlert;
+      clearTimeout(timer);
+    };
+  }, []);
+
+  if (!toast) return null;
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes toastSlideUp {
+          from { opacity: 0; transform: translateY(20px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}} />
+      <div style={{
+        position: 'fixed', bottom: 32, right: 32, zIndex: 999999,
+        background: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+        border: toast.type === 'error' ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(255,255,255,0.1)',
+        color: '#fff', padding: '16px 20px', borderRadius: 16,
+        display: 'flex', alignItems: 'center', gap: 16,
+        boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+        animation: 'toastSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+      }}>
+        <div style={{ 
+          width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: toast.type === 'error' ? 'rgba(239,68,68,0.15)' : 'rgba(34,197,94,0.15)',
+          color: toast.type === 'error' ? '#ef4444' : '#22c55e',
+          fontSize: 18
+        }}>
+          <i className={"fa-solid " + (toast.type === 'error' ? 'fa-triangle-exclamation' : 'fa-check')}></i>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>
+            {toast.type === 'error' ? 'Hata' : 'Başarılı'}
+          </span>
+          <span style={{ fontSize: 15, fontWeight: 500, color: '#fff' }}>{toast.message}</span>
+        </div>
+        <button 
+          onClick={() => setToast(null)}
+          style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', marginLeft: 8, padding: 4 }}
+        >
+          <i className="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -453,11 +662,11 @@ function SidebarContent({ tabs, activeTab, setActiveTab, handleLogout }) {
                 {tab.badge > 0 && (
                   <>
                     <span className="admin-pulse" />
-                    <span style={{ background: colors.danger, color: '#fff', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>{tab.badge}</span>
+                    <span style={{ background: colors.danger, color: 'var(--text-main)', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>{tab.badge}</span>
                   </>
                 )}
                 {tab.activeBadge > 0 && (
-                  <span style={{ background: '#3498db', color: '#fff', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>{tab.activeBadge}</span>
+                  <span style={{ background: '#3498db', color: 'var(--text-main)', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>{tab.activeBadge}</span>
                 )}
               </span>
             )}
@@ -582,7 +791,7 @@ function DashboardTab({ banners, featured, categories, coupons, orders, expenses
 
   return (
     <div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 24, padding: '16px 20px', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 24, padding: '16px 20px', background: 'var(--bg-alpha-02)', borderRadius: 16, border: '1px solid var(--bg-alpha-05)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 16 }}>
           <i className="fa-solid fa-calendar-days" style={{ color: colors.gold }}></i>
           <span style={{ fontWeight: 600, color: colors.text }}>Tarih Filtresi:</span>
@@ -602,9 +811,9 @@ function DashboardTab({ banners, featured, categories, coupons, orders, expenses
         ))}
         {timeFilter === 'custom' && (
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' }}>
-            <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: colors.text, colorScheme: 'dark', fontSize: 13 }} />
+            <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(0,0,0,0.2)', border: '1px solid var(--bg-alpha-10)', color: colors.text, colorScheme: 'dark', fontSize: 13 }} />
             <span style={{ color: colors.textMuted }}>-</span>
-            <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: colors.text, colorScheme: 'dark', fontSize: 13 }} />
+            <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(0,0,0,0.2)', border: '1px solid var(--bg-alpha-10)', color: colors.text, colorScheme: 'dark', fontSize: 13 }} />
           </div>
         )}
       </div>
@@ -661,14 +870,14 @@ function DashboardTab({ banners, featured, categories, coupons, orders, expenses
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {topItems.map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: 12 }}>
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'var(--bg-alpha-03)', borderRadius: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: idx < 3 ? 'rgba(212,175,55,0.2)' : 'rgba(255,255,255,0.1)', color: idx < 3 ? colors.gold : '#aaa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: idx < 3 ? 'rgba(212,175,55,0.2)' : 'var(--bg-alpha-10)', color: idx < 3 ? colors.gold : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13 }}>
                       {idx + 1}
                     </div>
                     <span style={{ fontWeight: 600 }}>{item.name}</span>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 20, fontSize: 13, fontWeight: 600 }}>
+                  <div style={{ background: 'var(--bg-alpha-10)', padding: '4px 10px', borderRadius: 20, fontSize: 13, fontWeight: 600 }}>
                     {item.count} adet
                   </div>
                 </div>
@@ -767,7 +976,7 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
         <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>💰 Maliyet & Finans Yönetimi</h2>
       </div>
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24, borderBottom: `1px solid rgba(255,255,255,0.1)` }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 24, borderBottom: `1px solid var(--bg-alpha-10)` }}>
         {[
           { id: 'summary', label: 'Finansal Özet' },
           { id: 'products', label: 'Ürün Maliyetleri' },
@@ -778,7 +987,7 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
             key={tab.id} 
             onClick={() => setActiveSubTab(tab.id)}
             style={{ 
-              background: 'transparent', border: 'none', color: activeSubTab === tab.id ? '#D4AF37' : 'rgba(255,255,255,0.5)',
+              background: 'transparent', border: 'none', color: activeSubTab === tab.id ? '#D4AF37' : 'var(--text-alpha-50)',
               padding: '12px 16px', fontSize: 15, fontWeight: activeSubTab === tab.id ? 600 : 400, cursor: 'pointer',
               borderBottom: activeSubTab === tab.id ? `2px solid #D4AF37` : '2px solid transparent', marginBottom: -1
             }}
@@ -792,22 +1001,22 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
           <div className="admin-card" style={{ padding: 24, textAlign: 'center' }}>
             <div style={{ fontSize: 32, color: '#2ecc71', marginBottom: 12 }}><i className="fa-solid fa-coins"></i></div>
-            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Toplam Ciro</div>
+            <div style={{ fontSize: 14, color: 'var(--text-alpha-50)' }}>Toplam Ciro</div>
             <div style={{ fontSize: 28, fontWeight: 700 }}>{formatPrice(totalRevenue)}</div>
           </div>
           <div className="admin-card" style={{ padding: 24, textAlign: 'center' }}>
             <div style={{ fontSize: 32, color: '#f39c12', marginBottom: 12 }}><i className="fa-solid fa-receipt"></i></div>
-            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Toplam Ürün Maliyeti</div>
+            <div style={{ fontSize: 14, color: 'var(--text-alpha-50)' }}>Toplam Ürün Maliyeti</div>
             <div style={{ fontSize: 28, fontWeight: 700 }}>{formatPrice(totalProductCost)}</div>
           </div>
           <div className="admin-card" style={{ padding: 24, textAlign: 'center' }}>
             <div style={{ fontSize: 32, color: '#e67e22', marginBottom: 12 }}><i className="fa-solid fa-money-bill-wave"></i></div>
-            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Toplam Sabit Giderler</div>
+            <div style={{ fontSize: 14, color: 'var(--text-alpha-50)' }}>Toplam Sabit Giderler</div>
             <div style={{ fontSize: 28, fontWeight: 700 }}>{formatPrice(totalFixedExpenses)}</div>
           </div>
           <div className="admin-card" style={{ padding: 24, textAlign: 'center', border: `2px solid ${netIncome >= 0 ? '#1abc9c' : '#e74c3c'}` }}>
             <div style={{ fontSize: 32, color: netIncome >= 0 ? '#1abc9c' : '#e74c3c', marginBottom: 12 }}><i className="fa-solid fa-chart-line"></i></div>
-            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Net Gelir</div>
+            <div style={{ fontSize: 14, color: 'var(--text-alpha-50)' }}>Net Gelir</div>
             <div style={{ fontSize: 28, fontWeight: 700 }}>{formatPrice(netIncome)}</div>
           </div>
         </div>
@@ -816,7 +1025,7 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
       {activeSubTab === 'products' && (
         <div className="admin-card" style={{ padding: 24 }}>
           <h3 style={{ marginTop: 0, marginBottom: 20 }}>Ürün Birim Maliyetleri</h3>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 20 }}>Menüdeki ürünlerin birim satış maliyetlerini (malzeme vb.) buradan güncelleyebilirsiniz. Değişiklikler anında kaydedilir.</p>
+          <p style={{ fontSize: 14, color: 'var(--text-alpha-50)', marginBottom: 20 }}>Menüdeki ürünlerin birim satış maliyetlerini (malzeme vb.) buradan güncelleyebilirsiniz. Değişiklikler anında kaydedilir.</p>
           <table className="admin-table">
             <thead>
               <tr>
@@ -829,7 +1038,7 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
             <tbody>
               {categories.map(c => c.items?.map(item => (
                 <tr key={item.id}>
-                  <td style={{ color: 'rgba(255,255,255,0.5)' }}>{c.title}</td>
+                  <td style={{ color: 'var(--text-alpha-50)' }}>{c.title}</td>
                   <td>{item.title || item.name}</td>
                   <td>{formatPrice(item.price)}</td>
                   <td>
@@ -857,7 +1066,7 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
           <div className="admin-card" style={{ padding: 24, flex: 1, minWidth: 300 }}>
             <h3 style={{ marginTop: 0, marginBottom: 20 }}>Gider Listesi</h3>
             {expenses.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: 20 }}>Henüz gider eklenmemiş.</div>
+              <div style={{ textAlign: 'center', color: 'var(--text-alpha-50)', padding: 20 }}>Henüz gider eklenmemiş.</div>
             ) : (
               <table className="admin-table">
                 <thead>
@@ -880,7 +1089,7 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr style={{ borderTop: '2px solid rgba(255,255,255,0.1)' }}>
+                  <tr style={{ borderTop: '2px solid var(--bg-alpha-10)' }}>
                     <td style={{ fontWeight: 700, paddingTop: 16 }}>TOPLAM</td>
                     <td style={{ fontWeight: 700, paddingTop: 16 }} colSpan="2">{formatPrice(expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0))}</td>
                   </tr>
@@ -911,7 +1120,7 @@ function FinanceTab({ expenses, categories, orders, reloadExpenses, reloadCatego
           <div className="admin-card" style={{ padding: 24, flex: 1, minWidth: 300 }}>
             <h3 style={{ marginTop: 0, marginBottom: 20 }}>Yaklaşan Ödemeler</h3>
             {(!reminders || reminders.length === 0) ? (
-              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: 20 }}>Henüz ödeme/alarm eklenmemiş.</div>
+              <div style={{ textAlign: 'center', color: 'var(--text-alpha-50)', padding: 20 }}>Henüz ödeme/alarm eklenmemiş.</div>
             ) : (
               <table className="admin-table">
                 <thead>
@@ -1013,7 +1222,7 @@ function IngredientsEditor({ ingredients, onChange }) {
           return (
             <button key={p.type} type="button" onClick={() => toggle(p)} style={{
               padding: '8px 14px', borderRadius: 10, border: `1px solid ${active ? colors.gold : colors.border}`,
-              background: active ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.04)',
+              background: active ? 'rgba(212,175,55,0.15)' : 'var(--bg-alpha-04)',
               color: active ? colors.gold : colors.textMuted, cursor: 'pointer', fontFamily: "'Outfit'", fontSize: 13,
               display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s',
             }}>
@@ -1052,7 +1261,7 @@ function CustomizableOptionsEditor({ options, onChange }) {
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {options.map((opt, idx) => (
-          <div key={idx} style={{ padding: '4px 10px', background: 'rgba(255,255,255,0.05)', borderRadius: 12, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, border: `1px solid ${colors.border}` }}>
+          <div key={idx} style={{ padding: '4px 10px', background: 'var(--bg-alpha-05)', borderRadius: 12, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, border: `1px solid ${colors.border}` }}>
             {opt}
             <i className="fa-solid fa-xmark" style={{ cursor: 'pointer', color: colors.danger }} onClick={() => onChange(options.filter(o => o !== opt))}></i>
           </div>
@@ -1066,12 +1275,14 @@ function CustomizableOptionsEditor({ options, onChange }) {
 // ============================================================
 // ITEM FORM (shared for banner/featured/menu)
 // ============================================================
-function ItemForm({ item, onSave, onCancel, showBadge = true, showHighlight = false }) {
+function ItemForm({ item, onSave, onCancel, showBadge = true, showHighlight = false, allCategories = [], defaultCategoryId = null }) {
   const [form, setForm] = useState({
     title: item?.title || '', emoji: item?.emoji || '', description: item?.description || '',
     price: item?.price || '', image: item?.image || '', badge: item?.badge || '',
     isHighlight: item?.isHighlight || false, ingredients: item?.ingredients || [],
     customizableIngredients: item?.customizableIngredients || [],
+    crossSellItemId: item?.crossSellItemId || 'auto',
+    categoryId: defaultCategoryId || ''
   });
   const [uploading, setUploading] = useState(false);
 
@@ -1145,9 +1356,62 @@ function ItemForm({ item, onSave, onCancel, showBadge = true, showHighlight = fa
             <label style={{ fontSize: 14, color: colors.textMuted }}>Öne Çıkar (isHighlight)</label>
           </div>
         )}
+        {allCategories && allCategories.length > 0 && defaultCategoryId && (
+          <div>
+            <label className="admin-label">Kategori *</label>
+            <select className="admin-select" value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })}>
+              {allCategories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.title}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        {allCategories && allCategories.length > 0 && (
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label className="admin-label">Çapraz Satış Önerisi</label>
+            <select className="admin-select" value={form.crossSellItemId} onChange={e => setForm({ ...form, crossSellItemId: e.target.value })}>
+              <option value="auto">Rastgele / Otomatik</option>
+              {allCategories.map(cat => (
+                <optgroup key={cat.id} label={cat.title}>
+                  {cat.items?.map(it => (
+                    <option key={it.id} value={it.id}>{it.title}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
       <div style={{ marginTop: 16 }}>
-        <label className="admin-label">Açıklama</label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <label className="admin-label" style={{ marginBottom: 0 }}>Açıklama</label>
+          <button 
+            type="button"
+            onClick={async (e) => {
+              e.preventDefault();
+              if (!form.description) return alert('Lütfen önce kısa bir açıklama veya malzeme listesi yazın.');
+              try {
+                setForm(prev => ({ ...prev, description: '✨ Yapay zeka yazıyor...' }));
+                const token = localStorage.getItem('adminToken');
+                const res = await fetch('/api/ai/enhance', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                  body: JSON.stringify({ text: form.description, ingredients: form.ingredients })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Bilinmeyen bir hata oluştu');
+                setForm(prev => ({ ...prev, description: data.result }));
+              } catch (err) {
+                alert('Yapay zeka hatası: ' + err.message);
+                setForm(prev => ({ ...prev, description: form.description })); 
+              }
+            }} 
+            className="admin-btn admin-btn-sm" 
+            style={{ background: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)', color: '#fff', border: 'none', gap: 6 }}
+          >
+            <i className="fa-solid fa-wand-magic-sparkles"></i> AI ile Düzenle
+          </button>
+        </div>
         <textarea className="admin-textarea" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Ürün açıklaması..." />
       </div>
       <div style={{ marginTop: 16 }}>
@@ -1195,6 +1459,14 @@ function BannersTab({ banners, reload }) {
     } catch (e) { alert('Hata: ' + e.message); }
   }
 
+  async function handleToggleVisibility(bannerId, newIsHidden) {
+    try {
+      const updated = banners.map(b => b.id === bannerId ? { ...b, isHidden: newIsHidden } : b);
+      await apiFetch('/api/banners', { method: 'PUT', body: JSON.stringify(updated) });
+      reload();
+    } catch (e) { alert('Hata: ' + e.message); }
+  }
+
   async function handleDelete(id) {
     try {
       const updated = banners.filter(b => b.id !== id);
@@ -1207,20 +1479,23 @@ function BannersTab({ banners, reload }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <p style={{ color: colors.textMuted, margin: 0 }}>{banners.length} banner kayıtlı</p>
+        <h2 style={{ fontSize: 20, margin: 0, color: colors.gold }}>Slider (Vitrin)</h2>
         <button className="admin-btn admin-btn-gold" onClick={() => setEditing('new')}>
-          <i className="fa-solid fa-plus"></i> Yeni Banner
+          <i className="fa-solid fa-plus"></i> Yeni Ekle
         </button>
       </div>
 
-      {editing && (
-        <ItemForm item={editing === 'new' ? null : editing} onSave={handleSave} onCancel={() => setEditing(null)} />
+      {editing === 'new' && (
+        <ItemForm item={null} onSave={handleSave} onCancel={() => setEditing(null)} showHighlight={false} />
       )}
 
-      <div style={{ display: 'grid', gap: 12 }}>
+      <div style={{ display: 'grid', gap: 16 }}>
         {banners.map((b, i) => (
-          <div key={b.id} className="admin-card" style={{ padding: 16, display: 'flex', gap: 16, alignItems: 'center', animation: `fadeIn 0.3s ease ${i * 0.05}s both`, flexWrap: 'wrap' }}>
-            {b.image && <img src={b.image} alt={b.title} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 12, border: `1px solid ${colors.border}`, flexShrink: 0 }} onError={e => { e.target.style.display = 'none'; }} />}
+          editing?.id === b.id ? (
+            <ItemForm key={b.id} item={editing} onSave={handleSave} onCancel={() => setEditing(null)} showHighlight={false} />
+          ) : (
+          <div key={b.id} className="admin-card" style={{ padding: 16, display: 'flex', gap: 16, alignItems: 'center', animation: `fadeIn 0.3s ease ${i * 0.05}s both`, flexWrap: 'wrap', opacity: b.isHidden ? 0.5 : 1 }}>
+            {b.image && <img src={b.image} alt={b.title} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 12, border: `1px solid ${colors.border}`, flexShrink: 0 }} onError={e => { e.target.style.display = 'none'; }} />}
             <div style={{ flex: 1, minWidth: 200 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 {b.emoji && <span>{b.emoji}</span>}
@@ -1230,22 +1505,32 @@ function BannersTab({ banners, reload }) {
               <p style={{ margin: 0, fontSize: 13, color: colors.textMuted, lineHeight: 1.4 }}>{b.description?.slice(0, 100)}...</p>
               <div style={{ fontSize: 14, fontWeight: 700, color: colors.gold, marginTop: 4 }}>{formatPrice(b.price)}</div>
             </div>
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-              <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setEditing(b)}>
-                <i className="fa-solid fa-pen"></i> Düzenle
-              </button>
-              {deleting === b.id ? (
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handleDelete(b.id)}>Evet</button>
-                  <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(null)}>Hayır</button>
-                </div>
-              ) : (
-                <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(b.id)} style={{ color: colors.danger }}>
-                  <i className="fa-solid fa-trash"></i>
+            <div className="admin-item-actions">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <label style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', width: 44, height: 24 }} title={b.isHidden ? "Satışa Aç" : "Satışa Kapat"}>
+                  <input type="checkbox" checked={!b.isHidden} onChange={(e) => handleToggleVisibility(b.id, !e.target.checked)} style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }} />
+                  <span style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: b.isHidden ? '#ef4444' : '#22c55e', borderRadius: 24, transition: '.3s', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}></span>
+                  <span style={{ position: 'absolute', height: 18, width: 18, left: b.isHidden ? 3 : 23, bottom: 3, backgroundColor: 'white', borderRadius: '50%', transition: '.3s', boxShadow: '0 2px 5px rgba(0,0,0,0.3)' }}></span>
+                </label>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setEditing(b)}>
+                  <i className="fa-solid fa-pen"></i> Düzenle
                 </button>
-              )}
+                {deleting === b.id ? (
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handleDelete(b.id)}>Evet</button>
+                    <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(null)}>Hayır</button>
+                  </div>
+                ) : (
+                  <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(b.id)} style={{ color: colors.danger }}>
+                    <i className="fa-solid fa-trash"></i>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
+          )
         ))}
       </div>
     </div>
@@ -1273,6 +1558,14 @@ function FeaturedTab({ featured, reload }) {
     } catch (e) { alert('Hata: ' + e.message); }
   }
 
+  async function handleToggleVisibility(featuredId, newIsHidden) {
+    try {
+      const updated = featured.map(f => f.id === featuredId ? { ...f, isHidden: newIsHidden } : f);
+      await apiFetch('/api/featured', { method: 'PUT', body: JSON.stringify(updated) });
+      reload();
+    } catch (e) { alert('Hata: ' + e.message); }
+  }
+
   async function handleDelete(id) {
     try {
       const updated = featured.filter(f => f.id !== id);
@@ -1285,19 +1578,22 @@ function FeaturedTab({ featured, reload }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <p style={{ color: colors.textMuted, margin: 0 }}>{featured.length} süper lezzet kayıtlı</p>
+        <h2 style={{ fontSize: 20, margin: 0, color: colors.gold }}>Süper Lezzetler</h2>
         <button className="admin-btn admin-btn-gold" onClick={() => setEditing('new')}>
-          <i className="fa-solid fa-plus"></i> Yeni Lezzet
+          <i className="fa-solid fa-plus"></i> Yeni Ekle
         </button>
       </div>
 
-      {editing && (
-        <ItemForm item={editing === 'new' ? null : editing} onSave={handleSave} onCancel={() => setEditing(null)} />
+      {editing === 'new' && (
+        <ItemForm item={null} onSave={handleSave} onCancel={() => setEditing(null)} showHighlight={false} />
       )}
 
-      <div style={{ display: 'grid', gap: 12 }}>
+      <div style={{ display: 'grid', gap: 16 }}>
         {featured.map((f, i) => (
-          <div key={f.id} className="admin-card" style={{ padding: 16, display: 'flex', gap: 16, alignItems: 'center', animation: `fadeIn 0.3s ease ${i * 0.05}s both`, flexWrap: 'wrap' }}>
+          editing?.id === f.id ? (
+            <ItemForm key={f.id} item={editing} onSave={handleSave} onCancel={() => setEditing(null)} showHighlight={false} />
+          ) : (
+          <div key={f.id} className="admin-card" style={{ padding: 16, display: 'flex', gap: 16, alignItems: 'center', animation: `fadeIn 0.3s ease ${i * 0.05}s both`, flexWrap: 'wrap', opacity: f.isHidden ? 0.5 : 1 }}>
             {f.image && <img src={f.image} alt={f.title} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 12, border: `1px solid ${colors.border}`, flexShrink: 0 }} onError={e => { e.target.style.display = 'none'; }} />}
             <div style={{ flex: 1, minWidth: 200 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -1307,28 +1603,37 @@ function FeaturedTab({ featured, reload }) {
               <p style={{ margin: 0, fontSize: 13, color: colors.textMuted, lineHeight: 1.4 }}>{f.description?.slice(0, 100)}...</p>
               <div style={{ fontSize: 14, fontWeight: 700, color: colors.gold, marginTop: 4 }}>{formatPrice(f.price)}</div>
             </div>
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-              <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setEditing(f)}>
-                <i className="fa-solid fa-pen"></i> Düzenle
-              </button>
-              {deleting === f.id ? (
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handleDelete(f.id)}>Evet</button>
-                  <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(null)}>Hayır</button>
-                </div>
-              ) : (
-                <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(f.id)} style={{ color: colors.danger }}>
-                  <i className="fa-solid fa-trash"></i>
+            <div className="admin-item-actions">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <label style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', width: 44, height: 24 }} title={f.isHidden ? "Satışa Aç" : "Satışa Kapat"}>
+                  <input type="checkbox" checked={!f.isHidden} onChange={(e) => handleToggleVisibility(f.id, !e.target.checked)} style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }} />
+                  <span style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: f.isHidden ? '#ef4444' : '#22c55e', borderRadius: 24, transition: '.3s', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}></span>
+                  <span style={{ position: 'absolute', height: 18, width: 18, left: f.isHidden ? 3 : 23, bottom: 3, backgroundColor: 'white', borderRadius: '50%', transition: '.3s', boxShadow: '0 2px 5px rgba(0,0,0,0.3)' }}></span>
+                </label>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setEditing(f)}>
+                  <i className="fa-solid fa-pen"></i> Düzenle
                 </button>
-              )}
+                {deleting === f.id ? (
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handleDelete(f.id)}>Evet</button>
+                    <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(null)}>Hayır</button>
+                  </div>
+                ) : (
+                  <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(f.id)} style={{ color: colors.danger }}>
+                    <i className="fa-solid fa-trash"></i>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
+          )
         ))}
       </div>
     </div>
   );
 }
-
 
 // ============================================================
 // MENU TAB
@@ -1337,6 +1642,9 @@ function MenuTab({ categories, reload }) {
   const [selectedCat, setSelectedCat] = useState(categories[0]?.id || '');
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const [isAddingCat, setIsAddingCat] = useState(false);
+  const [newCatTitle, setNewCatTitle] = useState('');
+  const [newCatEmoji, setNewCatEmoji] = useState('');
 
   useEffect(() => {
     if (categories.length > 0 && !categories.find(c => c.id === selectedCat)) {
@@ -1348,18 +1656,54 @@ function MenuTab({ categories, reload }) {
   const items = category?.items || [];
 
   async function handleSave(formData) {
+    const targetCatId = formData.categoryId || selectedCat;
     try {
-      const updatedCats = categories.map(c => {
-        if (c.id !== selectedCat) return c;
-        if (editing === 'new') {
-          return { ...c, items: [...c.items, { id: generateId('item'), ...formData }] };
-        }
-        return { ...c, items: c.items.map(it => it.id === editing.id ? { ...it, ...formData } : it) };
-      });
+      let updatedCats = categories.map(c => ({ ...c, items: [...c.items] }));
+      
+      if (editing === 'new') {
+         updatedCats = updatedCats.map(c => {
+           if (c.id === targetCatId) return { ...c, items: [...c.items, { id: generateId('item'), ...formData }] };
+           return c;
+         });
+      } else {
+         const originalCatId = selectedCat;
+         if (originalCatId !== targetCatId) {
+            updatedCats = updatedCats.map(c => {
+               if (c.id === originalCatId) return { ...c, items: c.items.filter(it => it.id !== editing.id) };
+               if (c.id === targetCatId) return { ...c, items: [...c.items, { ...editing, ...formData }] };
+               return c;
+            });
+         } else {
+            updatedCats = updatedCats.map(c => {
+               if (c.id === originalCatId) return { ...c, items: c.items.map(it => it.id === editing.id ? { ...it, ...formData } : it) };
+               return c;
+            });
+         }
+      }
+      setSelectedCat(targetCatId);
       await apiFetch('/api/menu', { method: 'PUT', body: JSON.stringify(updatedCats) });
       setEditing(null);
       reload();
     } catch (e) { alert('Hata: ' + e.message); }
+  }
+
+  async function handleAddCategory() {
+    if (!newCatTitle) return alert("Kategori adı zorunludur.");
+    const newCat = {
+      id: generateId('cat'),
+      title: newCatTitle,
+      emoji: newCatEmoji || '🍽️',
+      items: []
+    };
+    try {
+      const updatedCats = [...categories, newCat];
+      await apiFetch('/api/menu', { method: 'PUT', body: JSON.stringify(updatedCats) });
+      setNewCatTitle('');
+      setNewCatEmoji('');
+      setIsAddingCat(false);
+      setSelectedCat(newCat.id);
+      reload();
+    } catch(e) { alert('Hata: ' + e.message); }
   }
 
   async function handleDelete(itemId) {
@@ -1374,61 +1718,91 @@ function MenuTab({ categories, reload }) {
     } catch (e) { alert('Hata: ' + e.message); }
   }
 
+  async function handleToggleVisibility(itemId, newIsHidden) {
+    try {
+      const updatedCats = categories.map(c => {
+        if (c.id !== selectedCat) return c;
+        return { ...c, items: c.items.map(it => it.id === itemId ? { ...it, isHidden: newIsHidden } : it) };
+      });
+      await apiFetch('/api/menu', { method: 'PUT', body: JSON.stringify(updatedCats) });
+      reload();
+    } catch (e) { alert('Hata: ' + e.message); }
+  }
+
   return (
     <div>
       {/* Category selector */}
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 200 }}>
           <label className="admin-label">Kategori Seçin</label>
-          <select className="admin-select" value={selectedCat} onChange={e => { setSelectedCat(e.target.value); setEditing(null); }}>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.title} ({c.items?.length || 0} ürün)</option>)}
-          </select>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <select className="admin-select" value={selectedCat} onChange={e => { setSelectedCat(e.target.value); setEditing(null); }}>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.title} ({c.items?.length || 0} ürün)</option>)}
+            </select>
+            <button className="admin-btn admin-btn-ghost" onClick={() => setIsAddingCat(true)} title="Yeni Kategori Ekle"><i className="fa-solid fa-folder-plus"></i></button>
+          </div>
         </div>
         <button className="admin-btn admin-btn-gold" onClick={() => setEditing('new')} style={{ marginTop: 20 }}>
           <i className="fa-solid fa-plus"></i> Yeni Ürün
         </button>
       </div>
 
+      {isAddingCat && (
+        <div className="admin-card" style={{ padding: 16, marginBottom: 20, display: 'flex', gap: 12, alignItems: 'center', animation: 'fadeIn 0.3s ease', flexWrap: 'wrap' }}>
+           <input className="admin-input" placeholder="Kategori Adı (Örn: İçecekler)" value={newCatTitle} onChange={e => setNewCatTitle(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+           <input className="admin-input" placeholder="Emoji (Örn: 🥤)" value={newCatEmoji} onChange={e => setNewCatEmoji(e.target.value)} style={{ width: 140 }} />
+           <button className="admin-btn admin-btn-gold" onClick={handleAddCategory}>Kaydet</button>
+           <button className="admin-btn admin-btn-ghost" onClick={() => setIsAddingCat(false)}>İptal</button>
+        </div>
+      )}
+
       {editing === 'new' && (
-        <ItemForm item={null} onSave={handleSave} onCancel={() => setEditing(null)} showHighlight={true} />
+        <ItemForm item={null} onSave={handleSave} onCancel={() => setEditing(null)} showHighlight={true} allCategories={categories} defaultCategoryId={selectedCat} />
       )}
 
       <div style={{ display: 'grid', gap: 12 }}>
         {items.map((item, i) => (
-          <div key={item.id}>
-            {editing?.id === item.id ? (
-              <ItemForm item={item} onSave={handleSave} onCancel={() => setEditing(null)} showHighlight={true} />
-            ) : (
-              <div className="admin-card" style={{ padding: 16, display: 'flex', gap: 16, alignItems: 'center', animation: `fadeIn 0.3s ease ${i * 0.04}s both`, flexWrap: 'wrap' }}>
-                {item.image && <img src={item.image} alt={item.title} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 10, border: `1px solid ${colors.border}`, flexShrink: 0 }} onError={e => { e.target.style.display = 'none'; }} />}
-                <div style={{ flex: 1, minWidth: 180 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                    {item.emoji && <span>{item.emoji}</span>}
-                    <span style={{ fontWeight: 600, fontSize: 15 }}>{item.title}</span>
-                    {item.badge && <span className="admin-badge" style={{ background: 'rgba(212,175,55,0.15)', color: colors.gold, fontSize: 10 }}>{item.badge}</span>}
-                    {item.isHighlight && <span className="admin-badge" style={{ background: 'rgba(243,156,18,0.15)', color: '#f39c12', fontSize: 10 }}>⭐ Öne Çıkan</span>}
-                  </div>
-                  <p style={{ margin: 0, fontSize: 12, color: colors.textMuted }}>{item.description?.slice(0, 80)}...</p>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: colors.gold }}>{formatPrice(item.price)}</span>
-                </div>
-                <div className="admin-item-actions" style={{ flexShrink: 0 }}>
-                  <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setEditing(item)}>
-                    <i className="fa-solid fa-pen"></i> Düzenle
-                  </button>
-                  {deleting === item.id ? (
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handleDelete(item.id)}>Sil</button>
-                      <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(null)}>×</button>
-                    </div>
-                  ) : (
-                    <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(item.id)} style={{ color: colors.danger }}>
-                      <i className="fa-solid fa-trash"></i>
-                    </button>
-                  )}
-                </div>
+          editing?.id === item.id ? (
+            <ItemForm key={item.id} item={editing} onSave={handleSave} onCancel={() => setEditing(null)} showHighlight={true} allCategories={categories} defaultCategoryId={selectedCat} />
+          ) : (
+          <div key={item.id} className="admin-card" style={{ padding: 16, display: 'flex', gap: 16, alignItems: 'center', animation: `fadeIn 0.3s ease ${i * 0.04}s both`, flexWrap: 'wrap', opacity: item.isHidden ? 0.5 : 1 }}>
+            {item.image && <img src={item.image} alt={item.title} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 10, border: `1px solid ${colors.border}`, flexShrink: 0 }} onError={e => { e.target.style.display = 'none'; }} />}
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                {item.emoji && <span>{item.emoji}</span>}
+                <span style={{ fontWeight: 600, fontSize: 15 }}>{item.title}</span>
+                {item.badge && <span className="admin-badge" style={{ background: 'rgba(212,175,55,0.15)', color: colors.gold, fontSize: 10 }}>{item.badge}</span>}
+                {item.isHighlight && <span className="admin-badge" style={{ background: 'rgba(243,156,18,0.15)', color: '#f39c12', fontSize: 10 }}>⭐ Öne Çıkan</span>}
               </div>
-            )}
+              <p style={{ margin: 0, fontSize: 12, color: colors.textMuted }}>{item.description?.slice(0, 80)}...</p>
+              <span style={{ fontSize: 14, fontWeight: 700, color: colors.gold }}>{formatPrice(item.price)}</span>
+            </div>
+            <div className="admin-item-actions">
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <label style={{ cursor: 'pointer', position: 'relative', display: 'inline-block', width: 44, height: 24 }} title={item.isHidden ? "Satışa Aç" : "Satışa Kapat"}>
+                  <input type="checkbox" checked={!item.isHidden} onChange={(e) => handleToggleVisibility(item.id, !e.target.checked)} style={{ opacity: 0, width: 0, height: 0, position: 'absolute' }} />
+                  <span style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: item.isHidden ? '#ef4444' : '#22c55e', borderRadius: 24, transition: '.3s', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}></span>
+                  <span style={{ position: 'absolute', height: 18, width: 18, left: item.isHidden ? 3 : 23, bottom: 3, backgroundColor: 'white', borderRadius: '50%', transition: '.3s', boxShadow: '0 2px 5px rgba(0,0,0,0.3)' }}></span>
+                </label>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setEditing(item)}>
+                  <i className="fa-solid fa-pen"></i>
+                </button>
+                {deleting === item.id ? (
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handleDelete(item.id)}>Sil</button>
+                    <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(null)}>×</button>
+                  </div>
+                ) : (
+                  <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(item.id)} style={{ color: colors.danger }}>
+                    <i className="fa-solid fa-trash"></i>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
+          )
         ))}
         {items.length === 0 && <p style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>Bu kategoride ürün bulunamadı.</p>}
       </div>
@@ -1496,7 +1870,7 @@ function CouponsTab({ coupons, reload }) {
   }
 
   function getCouponStatus(c) {
-    if (!c.isActive) return { label: 'Pasif', color: colors.textDim, bg: 'rgba(255,255,255,0.05)' };
+    if (!c.isActive) return { label: 'Pasif', color: colors.textDim, bg: 'var(--bg-alpha-05)' };
     if (c.expiresAt && new Date(c.expiresAt) < new Date()) return { label: 'Süresi Dolmuş', color: colors.danger, bg: 'rgba(231,76,60,0.12)' };
     if (c.maxUses && c.usedCount >= c.maxUses) return { label: 'Tükenmiş', color: colors.warning, bg: 'rgba(243,156,18,0.12)' };
     return { label: 'Aktif', color: colors.success, bg: 'rgba(39,174,96,0.12)' };
@@ -1660,8 +2034,8 @@ function OrdersTab({ orders, reload }) {
               onClick={() => setFilterTab(tab.id)}
               style={{
                 padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '14px', whiteSpace: 'nowrap',
-                background: filterTab === tab.id ? 'var(--primary-color)' : 'rgba(255,255,255,0.05)',
-                color: filterTab === tab.id ? '#000' : '#fff',
+                background: filterTab === tab.id ? 'var(--primary-color)' : 'var(--bg-alpha-05)',
+                color: filterTab === tab.id ? '#000' : 'var(--text-main)',
                 transition: 'all 0.3s'
               }}
             >
@@ -1676,13 +2050,13 @@ function OrdersTab({ orders, reload }) {
             value={dateFilter} 
             onChange={e => setDateFilter(e.target.value)}
             className="admin-input" 
-            style={{ width: 'auto', padding: '8px 12px', height: 'auto', fontSize: '14px', background: 'rgba(255,255,255,0.06)', color: '#fff' }}
+            style={{ width: 'auto', padding: '8px 12px', height: 'auto', fontSize: '14px', background: 'var(--bg-alpha-06)', color: 'var(--text-main)' }}
           >
-            <option value="all" style={{ background: '#1a1a1a', color: '#fff' }}>Tüm Zamanlar</option>
-            <option value="daily" style={{ background: '#1a1a1a', color: '#fff' }}>Günlük (Bugün)</option>
-            <option value="weekly" style={{ background: '#1a1a1a', color: '#fff' }}>Haftalık</option>
-            <option value="monthly" style={{ background: '#1a1a1a', color: '#fff' }}>Aylık</option>
-            <option value="custom" style={{ background: '#1a1a1a', color: '#fff' }}>Özel Tarih</option>
+            <option value="all" style={{ background: 'var(--surface-color)', color: 'var(--text-main)' }}>Tüm Zamanlar</option>
+            <option value="daily" style={{ background: 'var(--surface-color)', color: 'var(--text-main)' }}>Günlük (Bugün)</option>
+            <option value="weekly" style={{ background: 'var(--surface-color)', color: 'var(--text-main)' }}>Haftalık</option>
+            <option value="monthly" style={{ background: 'var(--surface-color)', color: 'var(--text-main)' }}>Aylık</option>
+            <option value="custom" style={{ background: 'var(--surface-color)', color: 'var(--text-main)' }}>Özel Tarih</option>
           </select>
 
           {dateFilter === 'custom' && (
@@ -1719,7 +2093,7 @@ function OrdersTab({ orders, reload }) {
             />
             <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
               <button className="admin-btn admin-btn-ghost" onClick={() => setCancelModal({ isOpen: false, orderId: null, note: '' })}>Vazgeç</button>
-              <button className="admin-btn" style={{ background: colors.danger, color: '#fff' }} onClick={() => updateStatus(cancelModal.orderId, 'cancelled', cancelModal.note)}>İptali Onayla</button>
+              <button className="admin-btn" style={{ background: colors.danger, color: 'var(--text-main)' }} onClick={() => updateStatus(cancelModal.orderId, 'cancelled', cancelModal.note)}>İptali Onayla</button>
             </div>
           </div>
         </div>
@@ -1861,7 +2235,7 @@ function OrdersTab({ orders, reload }) {
                         <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(231,76,60,0.1)', borderLeft: '4px solid ' + colors.danger, borderRadius: '4px' }}>
                           <div style={{ fontWeight: 600, color: colors.danger, marginBottom: '4px' }}><i className="fa-solid fa-circle-exclamation"></i> Bu Sipariş İptal Edildi</div>
                           {order.statusHistory?.find(h => h.status === 'cancelled')?.note && (
-                            <div style={{ fontSize: '13px', color: '#fff' }}>İptal Notu: {order.statusHistory.find(h => h.status === 'cancelled').note}</div>
+                            <div style={{ fontSize: '13px', color: 'var(--text-main)' }}>İptal Notu: {order.statusHistory.find(h => h.status === 'cancelled').note}</div>
                           )}
                         </div>
                       )}
@@ -1878,6 +2252,139 @@ function OrdersTab({ orders, reload }) {
   );
 }
 
+function AIChatAssistant({ reloadAll }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState([{ role: 'ai', text: 'Merhaba! Ben Çatı Asistanı. Menü fiyatlarını veya stok durumlarını değiştirmek için bana yazabilirsiniz.' }]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    if (isOpen) scrollToBottom();
+  }, [messages, isOpen]);
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    const userText = input.trim();
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', text: userText }]);
+    setLoading(true);
+
+    try {
+      const localApiKey = localStorage.getItem('geminiApiKey');
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'X-AI-API-Key': localApiKey || ''
+        },
+        body: JSON.stringify({ message: userText })
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        setMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
+        if (data.actionExecuted) {
+          reloadAll();
+          alert('Asistan: İşlem gerçekleştirildi!');
+        }
+      } else {
+        setMessages(prev => [...prev, { role: 'ai', text: `Hata: ${data.error}` }]);
+      }
+    } catch (e) {
+      setMessages(prev => [...prev, { role: 'ai', text: 'Bağlantı hatası oluştu.' }]);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          position: 'fixed', bottom: '24px', right: '24px', width: '60px', height: '60px',
+          borderRadius: '50%', background: 'linear-gradient(135deg, #f39c12, #d35400)',
+          color: '#fff', fontSize: '24px', border: 'none', cursor: 'pointer',
+          boxShadow: '0 8px 24px rgba(243, 156, 18, 0.4)', zIndex: 9999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+        }}
+        onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1)'}
+        onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+      >
+        <i className={isOpen ? "fa-solid fa-times" : "fa-solid fa-robot"}></i>
+      </button>
+
+      {isOpen && (
+        <div style={{
+          position: 'fixed', bottom: '100px', right: '24px', width: '350px', height: '500px',
+          background: 'var(--surface-color)', border: '1px solid var(--glass-border)',
+          borderRadius: '20px', boxShadow: '0 12px 40px rgba(0,0,0,0.3)', zIndex: 9998,
+          display: 'flex', flexDirection: 'column', overflow: 'hidden'
+        }}>
+          <div style={{ background: 'linear-gradient(135deg, #f39c12, #d35400)', padding: '16px 20px', color: '#fff', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+              <i className="fa-solid fa-robot"></i>
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>Çatı Asistan</h3>
+              <p style={{ margin: 0, fontSize: '12px', opacity: 0.8 }}>Yapay Zeka Destekli</p>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(0,0,0,0.2)' }}>
+            {messages.map((msg, i) => (
+              <div key={i} style={{ alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
+                <div style={{
+                  background: msg.role === 'user' ? '#f39c12' : 'var(--glass-bg)',
+                  color: msg.role === 'user' ? '#fff' : 'var(--text-main)',
+                  padding: '12px 16px', borderRadius: '16px',
+                  borderBottomRightRadius: msg.role === 'user' ? '4px' : '16px',
+                  borderBottomLeftRadius: msg.role === 'ai' ? '4px' : '16px',
+                  fontSize: '14px', lineHeight: '1.5',
+                  border: msg.role === 'ai' ? '1px solid var(--glass-border)' : 'none'
+                }}>
+                  {msg.text}
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div style={{ alignSelf: 'flex-start', background: 'var(--glass-bg)', padding: '12px 16px', borderRadius: '16px', borderBottomLeftRadius: '4px', border: '1px solid var(--glass-border)' }}>
+                <i className="fa-solid fa-circle-notch fa-spin" style={{ color: 'var(--text-muted)' }}></i>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div style={{ padding: '16px', borderTop: '1px solid var(--glass-border)', background: 'var(--surface-color)', display: 'flex', gap: '8px' }}>
+            <input 
+              type="text" 
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSend()}
+              placeholder="Mesajınızı yazın..."
+              style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', padding: '12px 16px', borderRadius: '12px', fontSize: '14px', outline: 'none' }}
+              disabled={loading}
+            />
+            <button 
+              onClick={handleSend}
+              disabled={loading || !input.trim()}
+              style={{ width: '45px', height: '45px', borderRadius: '12px', background: '#f39c12', color: '#fff', border: 'none', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', opacity: loading || !input.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <i className="fa-solid fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 // ============================================================
 // SETTINGS TAB
 // ============================================================
@@ -1886,13 +2393,21 @@ function SettingsTab({ settings, reload }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (settings) setForm(settings);
+    if (settings) {
+      const localKey = localStorage.getItem('geminiApiKey');
+      setForm({ ...settings, ai: { ...settings.ai, geminiApiKey: settings.ai?.geminiApiKey || localKey || '' } });
+    }
   }, [settings]);
 
   async function handleSave() {
     setSaving(true);
     try {
       await apiFetch('/api/settings', { method: 'PUT', body: JSON.stringify(form) });
+      if (form.ai?.geminiApiKey) {
+        localStorage.setItem('geminiApiKey', form.ai.geminiApiKey);
+      } else {
+        localStorage.removeItem('geminiApiKey');
+      }
       reload();
       alert('Ayarlar başarıyla kaydedildi!');
     } catch (e) { alert('Hata: ' + e.message); }
@@ -1918,9 +2433,9 @@ function SettingsTab({ settings, reload }) {
           
           <label style={{ display: 'block', marginBottom: 16 }}>
             <div style={{ marginBottom: 6, fontSize: 13, color: colors.textMuted }}>Mağaza Durumu (Açık/Kapalı)</div>
-            <select className="admin-input" style={{ background: 'rgba(255,255,255,0.06)', color: '#fff' }} value={form.isStoreOpen ? 'true' : 'false'} onChange={e => setForm({...form, isStoreOpen: e.target.value === 'true'})}>
-              <option value="true" style={{ background: '#1a1a1a', color: '#fff' }}>Açık (Sipariş Alınabilir)</option>
-              <option value="false" style={{ background: '#1a1a1a', color: '#fff' }}>Kapalı (Bakım / Servis Dışı)</option>
+            <select className="admin-input" style={{ background: 'var(--bg-alpha-06)', color: 'var(--text-main)' }} value={form.isStoreOpen ? 'true' : 'false'} onChange={e => setForm({...form, isStoreOpen: e.target.value === 'true'})}>
+              <option value="true" style={{ background: 'var(--surface-color)', color: 'var(--text-main)' }}>Açık (Sipariş Alınabilir)</option>
+              <option value="false" style={{ background: 'var(--surface-color)', color: 'var(--text-main)' }}>Kapalı (Bakım / Servis Dışı)</option>
             </select>
           </label>
 
@@ -1935,8 +2450,23 @@ function SettingsTab({ settings, reload }) {
           </label>
           
           <label style={{ display: 'block', marginBottom: 16 }}>
+            <div style={{ marginBottom: 6, fontSize: 13, color: colors.textMuted }}>Minimum Sipariş Tutarı (TL)</div>
+            <input type="number" className="admin-input" value={form.minOrderAmount || ''} onChange={e => setForm({...form, minOrderAmount: Number(e.target.value)})} />
+          </label>
+          
+          <label style={{ display: 'block', marginBottom: 16 }}>
             <div style={{ marginBottom: 6, fontSize: 13, color: colors.textMuted }}>Ortalama Kurye Ücreti (Sepet İçi Uyarı) (TL)</div>
             <input type="number" className="admin-input" value={form.courierFee || ''} onChange={e => setForm({...form, courierFee: Number(e.target.value)})} />
+          </label>
+
+          <label style={{ display: 'block', marginBottom: 16 }}>
+            <div style={{ marginBottom: 6, fontSize: 13, color: colors.textMuted }}>Google Yıldız Puanı (Örn: 5.0)</div>
+            <input type="text" className="admin-input" value={form.ratingValue || ''} onChange={e => setForm({...form, ratingValue: e.target.value})} placeholder="5.0" />
+          </label>
+          
+          <label style={{ display: 'block', marginBottom: 16 }}>
+            <div style={{ marginBottom: 6, fontSize: 13, color: colors.textMuted }}>Google Yorum Sayısı (Örn: 60)</div>
+            <input type="text" className="admin-input" value={form.ratingCount || ''} onChange={e => setForm({...form, ratingCount: e.target.value})} placeholder="60" />
           </label>
         </div>
 
@@ -1976,12 +2506,30 @@ function SettingsTab({ settings, reload }) {
             <input type="text" className="admin-input" value={form.socialLinks?.googleReview || ''} onChange={e => setForm({...form, socialLinks: {...form.socialLinks, googleReview: e.target.value}})} placeholder="https://..." />
           </label>
 
+          <h3 style={{ fontSize: 16, color: colors.gold, marginTop: 32, marginBottom: 16, borderBottom: '1px solid ' + colors.border, paddingBottom: 8 }}>Mağaza WiFi Bilgileri</h3>
+          
+          <label style={{ display: 'block', marginBottom: 16 }}>
+            <div style={{ marginBottom: 6, fontSize: 13, color: colors.textMuted }}><i className="fa-solid fa-wifi" style={{color: '#3498db'}}></i> WiFi Ağ Adı</div>
+            <input type="text" className="admin-input" value={form.wifi?.name || ''} onChange={e => setForm({...form, wifi: {...form.wifi, name: e.target.value}})} placeholder="Ağ Adı" />
+          </label>
+          <label style={{ display: 'block', marginBottom: 16 }}>
+            <div style={{ marginBottom: 6, fontSize: 13, color: colors.textMuted }}><i className="fa-solid fa-key" style={{color: '#f1c40f'}}></i> WiFi Şifresi</div>
+            <input type="text" className="admin-input" value={form.wifi?.password || ''} onChange={e => setForm({...form, wifi: {...form.wifi, password: e.target.value}})} placeholder="Şifre" />
+          </label>
+
+          <h3 style={{ fontSize: 16, color: colors.gold, marginTop: 32, marginBottom: 16, borderBottom: '1px solid ' + colors.border, paddingBottom: 8 }}>Yapay Zeka (AI) Entegrasyonu</h3>
+          
+          <label style={{ display: 'block', marginBottom: 16 }}>
+            <div style={{ marginBottom: 6, fontSize: 13, color: colors.textMuted }}><i className="fa-solid fa-wand-magic-sparkles" style={{color: '#9b59b6'}}></i> Google Gemini API Key</div>
+            <input type="password" className="admin-input" value={form.ai?.geminiApiKey || ''} onChange={e => setForm({...form, ai: {...form.ai, geminiApiKey: e.target.value}})} placeholder="AIzaSy..." />
+            <div style={{ marginTop: 6, fontSize: 11, color: colors.textMuted }}>Menü eklerken veya düzenlerken yapay zeka desteğini kullanmak için geçerli bir Gemini API Key girin.</div>
+          </label>
+
         </div>
       </div>
     </div>
   );
 }
-
 
 // ============================================================
 // DESIGN TAB
@@ -2186,73 +2734,129 @@ function DesignTab({ settings, reload }) {
   );
 }
 
-// ============================================================
-// WAITER TAB
-// ============================================================
-function WaiterTab({ requests, setWaiterRequests }) {
+function WaitersTab({ requests, reload }) {
+  const handleComplete = async (id) => {
+    try {
+      const res = await fetch(`/api/waiter`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
+        body: JSON.stringify({ id, status: 'completed' })
+      });
+      if (res.ok) {
+        reload();
+        alert('Garson talebi başarıyla tamamlandı.');
+      } else {
+        if (res.status === 404) {
+          // Sistem resetlenmiş olabilir, sayfayı yenile
+          reload();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          alert(data.error || 'Hata oluştu.');
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Bağlantı hatası.');
+    }
+  };
+
+  const handleCancel = async (id) => {
+    if (!confirm('İptal etmek istediğinize emin misiniz?')) return;
+    try {
+      const res = await fetch(`/api/waiter`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
+        body: JSON.stringify({ id, status: 'cancelled' })
+      });
+      if (res.ok) {
+        reload();
+        alert('Garson talebi iptal edildi.');
+      } else {
+        if (res.status === 404) {
+          reload();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          alert(data.error || 'Hata oluştu.');
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Bağlantı hatası.');
+    }
+  };
+
   const pendingRequests = requests.filter(r => r.status === 'pending');
   const pastRequests = requests.filter(r => r.status !== 'pending').slice(0, 50);
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h2 style={{ margin: 0 }}>Garson Talepleri</h2>
-      </div>
+      <h3 style={{ marginBottom: 16, color: 'var(--text-main)', fontSize: 18 }}>Bekleyen Talepler</h3>
       
-      <div style={{ background: 'rgba(255,255,255,0.04)', padding: 20, borderRadius: 12, marginBottom: 24 }}>
-        <h3 style={{ marginTop: 0, marginBottom: 16, color: '#e8c94a' }}>Bekleyen Talepler</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+      {pendingRequests.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg-alpha-05)', borderRadius: 20, border: '1px solid var(--glass-border)', marginBottom: 32 }}>
+          <i className="fa-solid fa-bell-concierge" style={{ fontSize: 48, color: 'var(--text-muted)', marginBottom: 16 }}></i>
+          <p style={{ color: 'var(--text-muted)', fontSize: 16 }}>Şu an bekleyen garson talebi bulunmuyor.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '16px', marginBottom: 32 }}>
           {pendingRequests.map(req => (
-            <div key={req.id} style={{ background: 'rgba(255,255,255,0.05)', padding: 16, borderRadius: 12, borderLeft: '4px solid #f39c12' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <strong style={{ fontSize: 18 }}>Masa {req.tableNo}</strong>
-                <span style={{ fontSize: 12, color: '#999' }}>{formatDate(req.createdAt)}</span>
+            <div key={req.id || req._id} style={{ background: 'var(--surface-color)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <div style={{ background: 'rgba(243, 156, 18, 0.1)', color: '#f39c12', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: '800', border: '1px solid rgba(243, 156, 18, 0.3)' }}>
+                  {req.tableNo}
+                </div>
+                <div>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '18px', color: 'var(--text-main)', fontWeight: '700' }}>Masa {req.tableNo}</h4>
+                  <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)' }}><i className="fa-regular fa-clock" style={{ marginRight: '6px' }}></i>{new Date(req.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
               </div>
-              <div style={{ marginBottom: 16, color: '#ccc' }}>{req.reason}</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button 
-                  onClick={async () => {
-                    const res = await fetch('/api/waiter', { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ id: req.id, status: 'completed' }) });
-                    if(res.ok) setWaiterRequests(prev => prev.map(p => p.id === req.id ? {...p, status: 'completed', completedAt: new Date().toISOString()} : p));
-                  }}
-                  style={{ flex: 1, padding: '8px', background: 'rgba(39,174,96,0.2)', border: '1px solid #27ae60', color: '#27ae60', borderRadius: 8, cursor: 'pointer' }}
-                >
-                  Tamamlandı
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button onClick={() => handleComplete(req.id || req._id)} style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '12px 24px', borderRadius: '12px', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={e => e.currentTarget.style.background = 'rgba(34, 197, 94, 0.2)'} onMouseOut={e => e.currentTarget.style.background = 'rgba(34, 197, 94, 0.1)'}>
+                  <i className="fa-solid fa-check" style={{ marginRight: '8px' }}></i> Tamamlandı
                 </button>
-                <button 
-                  onClick={async () => {
-                    const res = await fetch('/api/waiter', { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ id: req.id, status: 'cancelled' }) });
-                    if(res.ok) setWaiterRequests(prev => prev.map(p => p.id === req.id ? {...p, status: 'cancelled', completedAt: new Date().toISOString()} : p));
-                  }}
-                  style={{ flex: 1, padding: '8px', background: 'rgba(231,76,60,0.2)', border: '1px solid #e74c3c', color: '#e74c3c', borderRadius: 8, cursor: 'pointer' }}
-                >
+                <button onClick={() => handleCancel(req.id || req._id)} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '12px 24px', borderRadius: '12px', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'} onMouseOut={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}>
                   İptal
                 </button>
               </div>
             </div>
           ))}
-          {pendingRequests.length === 0 && (
-            <div style={{ color: '#999' }}>Bekleyen talep yok.</div>
-          )}
         </div>
-      </div>
+      )}
 
-      <div style={{ background: 'rgba(255,255,255,0.04)', padding: 20, borderRadius: 12, opacity: 0.8 }}>
-        <h3 style={{ marginTop: 0, marginBottom: 16, color: '#999' }}>Geçmiş Talepler (Son 50)</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 12 }}>
-          {pastRequests.map(req => (
-            <div key={req.id} style={{ background: 'rgba(0,0,0,0.2)', padding: 12, borderRadius: 8, borderLeft: `3px solid ${req.status === 'completed' ? '#27ae60' : '#e74c3c'}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <strong>Masa {req.tableNo}</strong>
-                <span style={{ fontSize: 11, color: req.status === 'completed' ? '#27ae60' : '#e74c3c' }}>{req.status === 'completed' ? 'Tamamlandı' : 'İptal'}</span>
+      {pastRequests.length > 0 && (
+        <>
+          <h3 style={{ marginBottom: 16, color: 'var(--text-muted)', fontSize: 18, borderTop: '1px solid var(--glass-border)', paddingTop: 24 }}>Geçmiş Talepler (Son 50)</h3>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {pastRequests.map(req => (
+              <div key={req.id || req._id} style={{ background: 'var(--bg-alpha-03)', border: '1px solid var(--glass-border)', borderRadius: '16px', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', opacity: 0.7 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div style={{ background: 'var(--bg-alpha-10)', color: 'var(--text-muted)', width: '50px', height: '50px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '800' }}>
+                    {req.tableNo}
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', color: 'var(--text-muted)', fontWeight: '600' }}>Masa {req.tableNo}</h4>
+                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-alpha-50)' }}>
+                      <i className="fa-regular fa-clock" style={{ marginRight: '6px' }}></i>
+                      {new Date(req.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                      {req.updatedAt && ` - ${new Date(req.updatedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`}
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: req.status === 'completed' ? '#22c55e' : '#ef4444', fontSize: '14px', fontWeight: '600', padding: '6px 12px', background: req.status === 'completed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>
+                  <i className={`fa-solid ${req.status === 'completed' ? 'fa-check' : 'fa-xmark'}`}></i> 
+                  {req.status === 'completed' ? 'Tamamlandı' : 'İptal Edildi'}
+                </div>
               </div>
-              <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>{req.reason}</div>
-              <div style={{ fontSize: 11, color: '#666' }}>Açılış: {formatDate(req.createdAt)}</div>
-              <div style={{ fontSize: 11, color: '#666' }}>Kapanış: {formatDate(req.completedAt)}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
