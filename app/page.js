@@ -20,7 +20,130 @@ export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [theme, setTheme] = useState('dark');
   
+  // Details Modal State
+  const [favorites, setFavorites] = useState([]);
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState('home');
   useEffect(() => {
+    if (!isCartOpen && !isFavoritesOpen && (activeNav === 'cart' || activeNav === 'favorites')) setActiveNav('home');
+    if (isCartOpen) setActiveNav('cart');
+    if (isFavoritesOpen) setActiveNav('favorites');
+  }, [isCartOpen, isFavoritesOpen, activeNav]);
+  const [showMinCartAlert, setShowMinCartAlert] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [detailQuantity, setDetailQuantity] = useState(1);
+  const [recommendation, setRecommendation] = useState(null);
+
+  // Waiter states
+  const [isWaiterOpen, setIsWaiterOpen] = useState(false);
+  const [waiterTableNo, setWaiterTableNo] = useState('');
+  const [waiterLoading, setWaiterLoading] = useState(false);
+  const [showWaiterSuccess, setShowWaiterSuccess] = useState(false);
+
+  const handleCallWaiter = async () => {
+    if (!waiterTableNo.trim()) {
+      setToast({ msg: 'Lütfen masa numaranızı girin.', type: 'error' });
+      return;
+    }
+    setWaiterLoading(true);
+    try {
+      const res = await fetch('/api/waiter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tableNo: waiterTableNo })
+      });
+      if (res.ok) {
+        setIsWaiterOpen(false);
+        setWaiterTableNo('');
+        setShowWaiterSuccess(true);
+        setTimeout(() => setShowWaiterSuccess(false), 3500);
+      } else {
+        setToast({ msg: 'Talep oluşturulamadı. Lütfen tekrar deneyin.', type: 'error' });
+      }
+    } catch (e) {
+      setToast({ msg: 'Bağlantı hatası.', type: 'error' });
+    } finally {
+      setWaiterLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isDetailOpen && selectedItem) {
+      if (data.categories && data.categories.length > 0) {
+        
+        // 1. Ozel (Custom) Cross-Sell Kontrolu
+        if (selectedItem.crossSellItemId && selectedItem.crossSellItemId !== 'auto') {
+          let customRecItem = null;
+          data.categories.forEach(c => {
+            if (c.items) {
+              const found = c.items.find(i => i.id === selectedItem.crossSellItemId);
+              if (found) customRecItem = found;
+            }
+          });
+          
+          if (customRecItem) {
+            setRecommendation({
+              item: customRecItem,
+              phrase: "Bunun yanına şu çok iyi gider!"
+            });
+            return;
+          }
+        }
+
+        // 2. Otomatik Cross-Sell (Fallback)
+        const currentCategory = data.categories.find(c => c.id === selectedItem.categoryId);
+        const currentTitle = currentCategory ? (currentCategory.title || '').toLowerCase() : '';
+        const isYemek = currentTitle.includes('kebap') || currentTitle.includes('ızgara') || currentTitle.includes('menü') || currentTitle.includes('dürüm') || currentTitle.includes('ana') || currentTitle.includes('döner');
+        
+        let validCats = data.categories.filter(c => {
+          if (c.id === selectedItem.categoryId) return false;
+          const cTitle = (c.title || '').toLowerCase();
+          const isCatYemek = cTitle.includes('kebap') || cTitle.includes('ızgara') || cTitle.includes('menü') || cTitle.includes('dürüm') || cTitle.includes('ana') || cTitle.includes('döner');
+          const isCatSide = cTitle.includes('ara') || cTitle.includes('başlangıç') || cTitle.includes('meze') || cTitle.includes('içecek') || cTitle.includes('tatlı');
+          
+          if (isYemek) return isCatSide;
+          return isCatYemek;
+        });
+
+        validCats = validCats.filter(c => c.items && c.items.some(i => i && i.title && i.price));
+
+        if (validCats.length === 0) {
+          validCats = data.categories.filter(c => c.id !== selectedItem.categoryId && c.items && c.items.some(i => i && i.title && i.price));
+        }
+
+        if (validCats.length > 0) {
+          const randomCat = validCats[Math.floor(Math.random() * validCats.length)];
+          const validItems = randomCat.items.filter(i => i && i.title && i.price && !i.isHidden);
+          const suggestion = validItems[Math.floor(Math.random() * validItems.length)];
+          const phrases = [
+            "Bunun yanında şu da çok iyi gider;",
+            "Bunun yanında genellikle bu eksiksiz olmaz;",
+            "Damak çatlatan uyum için önerimiz:",
+            "Bu lezzeti şununla taçlandırın:",
+            "Yanında bir de bu olsa harika olmaz mı?",
+            "Lezzet şölenini tamamlamak için ideal:",
+            "Bunun yanına en çok yakışan lezzet:",
+            "Şefin özel tavsiyesi;",
+            "Yemeğin keyfini ikiye katlamak için:",
+            "Bunu deneyenler genelde bunu da sepete ekliyor:"
+          ];
+          const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+          setRecommendation({ item: suggestion, phrase: randomPhrase });
+        } else {
+          setRecommendation(null);
+        }
+      }
+    } else {
+      setRecommendation(null);
+    }
+  }, [isDetailOpen, selectedItem, data]);
+  
+  useEffect(() => {
+    const savedFavs = localStorage.getItem('appFavs');
+    if (savedFavs) {
+      try { setFavorites(JSON.parse(savedFavs)); } catch(e){}
+    }
     const savedTheme = localStorage.getItem('appTheme') || 'dark';
     setTheme(savedTheme);
     if (savedTheme === 'light') {
@@ -40,7 +163,6 @@ export default function Home() {
       document.body.classList.remove('light-mode');
     }
   };
-
   
   // Double Confirmation & Tracking Logic
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -55,16 +177,19 @@ export default function Home() {
     // trackingOrder varsa bildirimleri durdur
     if (!data.categories || data.categories.length === 0 || trackingOrder) return;
     const interval = setInterval(() => {
-      const allItems = [...(data.banners || []), ...(data.categories.flatMap(c => c.items))].filter(i => i && i.title);
+      const allItems = [...(data.banners || []), ...(data.categories.flatMap(c => c.items))].filter(i => i && i.title && !i.isHidden);
       if (allItems.length > 0) {
         const randomItem = allItems[Math.floor(Math.random() * allItems.length)];
         const randomMsg = toastMessages[Math.floor(Math.random() * toastMessages.length)];
         setToast({
+          type: 'cross-sell',
+          header: 'Bunu denemiş miydiniz?',
           title: randomItem.title,
           price: randomItem.price,
           image: randomItem.image,
           msg: randomMsg,
-          originalItem: randomItem
+          actionText: '+ Sipariş Ver',
+          action: () => addToCart(randomItem)
         });
         setTimeout(() => setToast(null), 8000);
       }
@@ -139,14 +264,67 @@ export default function Home() {
   const courierFee = settings.courierFee ?? 60;
   const isStoreOpen = settings.isStoreOpen ?? true;
 
+  const activeBanners = (data.banners || []).filter(b => !b.isHidden);
+  const activeFeatured = (data.featured || []).filter(f => !f.isHidden);
+
   const cartTotal = cart.reduce((sum, item) => sum + item.price, 0);
   const discountAmount = appliedCoupon ? appliedCoupon.discount : 0;
   const finalTotal = cartTotal - discountAmount;
 
   // --- Cart Actions ---
+  const toggleFavorite = (item) => {
+    let newFavs;
+    if (favorites.some(f => f.id === item.id)) {
+      newFavs = favorites.filter(f => f.id !== item.id);
+      setToast({ type: 'success', header: 'Favorilerden Çıkarıldı', title: item.title, msg: 'Ürün favorilerden çıkarıldı.', image: item.image });
+    } else {
+      newFavs = [...favorites, item];
+      setToast({ type: 'success', header: 'Favorilere Eklendi', title: item.title, msg: 'Ürün favorilere eklendi!', image: item.image });
+    }
+    setFavorites(newFavs);
+    localStorage.setItem('appFavs', JSON.stringify(newFavs));
+  };
+
   const addToCart = (item) => {
     const isMesrubat = item.title?.toLowerCase().includes('meşrubat');
     setCart([...cart, { ...item, cartId: Date.now() + Math.random(), excludedIngredients: [], selectedDrink: isMesrubat ? 'Kola' : null }]);
+    
+    // Suggest a random item from a different category
+    let foundSuggestion = false;
+    if (data.categories && data.categories.length > 0) {
+      const otherCats = data.categories.filter(c => c.id !== item.categoryId);
+      if (otherCats.length > 0) {
+        const validCats = otherCats.filter(c => c.items && c.items.some(i => i && i.title && i.price));
+        if (validCats.length > 0) {
+          const randomCat = validCats[Math.floor(Math.random() * validCats.length)];
+          const validItems = randomCat.items.filter(i => i && i.title && i.price && !i.isHidden);
+          const suggestion = validItems[Math.floor(Math.random() * validItems.length)];
+          setToast({
+            type: 'cross-sell',
+            header: 'Bunu denemiş miydiniz?',
+            title: suggestion.title,
+            msg: toastMessages[Math.floor(Math.random() * toastMessages.length)],
+            price: suggestion.price,
+            image: suggestion.image,
+            actionText: '+ Sepete Ekle',
+            action: () => addToCart(suggestion)
+          });
+          foundSuggestion = true;
+        }
+      }
+    }
+    
+    if (!foundSuggestion) {
+      setToast({
+        type: 'success',
+        header: 'Sepete Eklendi',
+        title: item.title,
+        msg: 'Ürün başarıyla sepete eklendi.',
+        price: item.price,
+        image: item.image,
+      });
+    }
+    setTimeout(() => setToast(null), 8000);
   };
 
   const removeFromCart = (cartId) => {
@@ -365,10 +543,10 @@ export default function Home() {
     // Auto-play slider
     const slider = document.getElementById('mainBannerSlider');
     let slideInterval;
-    if (slider && data.banners.length > 0) {
+    if (slider && activeBanners.length > 0) {
       slideInterval = setInterval(() => {
         setCurrentSlide(prev => {
-          const next = (prev + 1) % data.banners.length;
+          const next = (prev + 1) % activeBanners.length;
           slider.scrollTo({ left: slider.clientWidth * next, behavior: 'smooth' });
           return next;
         });
@@ -414,7 +592,7 @@ export default function Home() {
       window.removeEventListener('scroll', handleScroll);
       if (slideInterval) clearInterval(slideInterval);
     };
-  }, [data.categories, activeTab, data.banners.length]);
+  }, [data.categories, activeTab, activeBanners.length]);
 
   return (
     <>
@@ -464,11 +642,9 @@ export default function Home() {
           </>
         );
       })()}
-
       {/* HEADER */}
       <header className="hero">
         <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 999, display: 'flex', gap: '8px' }}>
-          
           <button onClick={toggleTheme} style={{ background: 'var(--theme-btn-bg)', border: '1px solid var(--glass-border)', color: 'var(--theme-btn-color)', padding: '8px', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.3s' }}>
             <i className={theme === 'dark' ? "fa-solid fa-sun" : "fa-solid fa-moon"}></i>
           </button>
@@ -478,16 +654,16 @@ export default function Home() {
           </button>
         </div>
         <div className="container hero-content" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--primary-color)', boxShadow: '0 4px 15px rgba(0,0,0,0.5)', position: 'relative' }}>
+          <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--primary-color)', boxShadow: '0 4px 15px var(--glass-input-focus)', position: 'relative' }}>
             <Image src="/ortakoy-logo.png" alt="Ortaköy Kumrucusu Logo" fill style={{ objectFit: 'cover' }} sizes="80px" priority />
           </div>
           <div>
-            <h2 className="hero-subtitle" style={{ marginBottom: '4px' }}>Premium Fast Food</h2>
-            <h1 className="hero-title" style={{ fontSize: '24px' }}>Ortaköy Kumrucusu</h1>
+            <h2 className="hero-subtitle" style={{ marginBottom: '4px' }}>Restoran</h2>
+            <h1 className="hero-title" style={{ fontSize: '24px' }}>Ortaköy Kumrucusu Osmanbey</h1>
           </div>
         </div>
         <div className="container hero-info" style={{ marginTop: '16px' }}>
-          <span className="info-badge rating"><i className="fa-solid fa-star"></i> 5.0 (60 Yorum)</span>
+          <span className="info-badge rating"><i className="fa-solid fa-star"></i> {data.settings?.ratingValue || '5.0'} ({data.settings?.ratingCount || '60'} Yorum)</span>
           <span className="info-badge"><i className="fa-solid fa-bag-shopping"></i> Gel-al</span>
           <span className="info-badge"><i className="fa-solid fa-motorcycle"></i> Adrese Teslim</span>
         </div>
@@ -526,7 +702,7 @@ export default function Home() {
       <main className="container">
         
         {/* SLIDER BANNERS */}
-        {!searchQuery && data.banners.length > 0 && (
+        {!searchQuery && activeBanners.length > 0 && (
           <>
             <div 
               className="banner-slider" 
@@ -536,8 +712,8 @@ export default function Home() {
                 if (index !== currentSlide) setCurrentSlide(index);
               }}
             >
-              {data.banners.map((banner, i) => (
-                <div key={banner.id} className="banner-card">
+              {activeBanners.map((banner, i) => (
+                <div key={banner.id} className="banner-card" onClick={() => { setSelectedItem(banner); setIsDetailOpen(true); }} style={{ cursor: 'pointer' }}>
                   <div className="item-badges">
                   {banner.badge && <span className="tag-badge tag-pop" style={{ fontSize: '12px', padding: '6px 12px' }}><i className="fa-solid fa-star"></i> {banner.badge}</span>}
                 </div>
@@ -554,14 +730,14 @@ export default function Home() {
                   </div>
                   <div className="banner-footer">
                     <span className="banner-price">{banner.price} ₺</span>
-                    <button className="btn-large" onClick={() => addToCart(banner)}>Siparişe Ekle</button>
+                    <button className="btn-large" onClick={(e) => { e.stopPropagation(); addToCart(banner); }}>Siparişe Ekle</button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
           <div className="slider-dots" id="bannerDots" style={{ marginTop: '16px', marginBottom: '32px' }}>
-            {data.banners.map((_, idx) => (
+            {activeBanners.map((_, idx) => (
               <div 
                 key={idx} 
                 className={`slider-dot ${currentSlide === idx ? 'active' : ''}`}
@@ -579,10 +755,10 @@ export default function Home() {
       )}
 
         {/* FEATURED ITEMS (SÜPER LEZZETLER) */}
-        {!searchQuery && data.featured.length > 0 && (
+        {!searchQuery && activeFeatured.length > 0 && (
           <div className="featured-grid">
-            {data.featured.map(item => (
-              <div key={item.id} className="featured-card">
+            {activeFeatured.map(item => (
+              <div key={item.id} className="featured-card" onClick={() => { setSelectedItem(item); setIsDetailOpen(true); }} style={{ cursor: 'pointer' }}>
                 <div className="featured-img-wrapper">
                   <Image src={item.image} alt={item.title} fill style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 50vw, 300px" />
                   <span className="tag-badge tag-new"><i className="fa-solid fa-star"></i> SÜPER LEZZET</span>
@@ -597,7 +773,7 @@ export default function Home() {
                   </div>
                   <div className="featured-footer">
                     <span className="price">{item.price} ₺</span>
-                    <button className="btn-add-large" onClick={() => addToCart(item)}>Siparişe Ekle</button>
+                    <button className="btn-add-large" onClick={(e) => { e.stopPropagation(); addToCart(item); }}>Siparişe Ekle</button>
                   </div>
                 </div>
               </div>
@@ -607,13 +783,14 @@ export default function Home() {
 
         {/* MENU CATEGORIES */}
         {data.categories.map(cat => {
-          const filteredItems = cat.items.filter(item => 
-            !searchQuery || 
-            item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-            (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()))
-          );
+          const filteredItems = cat.items.filter(item => {
+            if (item.isHidden) return false;
+            return !searchQuery || 
+              item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+              (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+          });
           
-          if (searchQuery && filteredItems.length === 0) return null;
+          if (filteredItems.length === 0) return null;
 
           return (
           <section key={cat.id} id={cat.id} className="menu-section">
@@ -623,7 +800,7 @@ export default function Home() {
             
             {filteredItems.map(item => (
               item.isHighlight ? (
-                <div key={item.id} className="card-highlight">
+                <div key={item.id} className="card-highlight" onClick={() => { setSelectedItem(item); setIsDetailOpen(true); }} style={{ cursor: 'pointer' }}>
                   <div className="item-badges">
                     {item.badge && <span className="tag-badge tag-pop"><i className="fa-solid fa-star"></i> {item.badge}</span>}
                   </div>
@@ -640,12 +817,12 @@ export default function Home() {
                     </div>
                     <div className="card-footer" style={{ marginTop: '12px' }}>
                       <span className="price">{item.price} ₺</span>
-                      <button className="btn-add" onClick={() => addToCart(item)}><i className="fa-solid fa-plus"></i></button>
+                      <button className="btn-add" onClick={(e) => { e.stopPropagation(); addToCart(item); }}><i className="fa-solid fa-plus"></i></button>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div key={item.id} className="list-item">
+                <div key={item.id} className="list-item" onClick={() => { setSelectedItem(item); setIsDetailOpen(true); }} style={{ cursor: 'pointer' }}>
                   <div className="list-item-thumb"><Image src={item.image} alt={item.title} fill style={{ objectFit: 'cover' }} sizes="(max-width: 768px) 50vw, 300px" /></div>
                   <div className="list-item-content">
                     <div className="list-item-info">
@@ -659,7 +836,7 @@ export default function Home() {
                     </div>
                     <div className="list-item-bottom">
                       <div className="list-item-price">{item.price} ₺</div>
-                      <button className="btn-add-small" onClick={() => addToCart(item)}><i className="fa-solid fa-plus"></i></button>
+                      <button className="btn-add-small" onClick={(e) => { e.stopPropagation(); addToCart(item); }}><i className="fa-solid fa-plus"></i></button>
                     </div>
                   </div>
                 </div>
@@ -668,6 +845,35 @@ export default function Home() {
           </section>
         );
         })}
+
+        {/* WIFI BILGILERI */}
+        {data.settings?.wifi?.name && (
+          <div style={{ marginTop: '30px', marginBottom: '8px' }}>
+            <div className="contact-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '24px', background: 'var(--surface-color)', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', background: 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)', boxShadow: '0 4px 10px rgba(52, 152, 219, 0.3)' }}>
+                  <i className="fa-solid fa-wifi" style={{ fontSize: '20px' }}></i>
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '18px', margin: 0, color: 'var(--text-main)', fontWeight: 700 }}>Ücretsiz WiFi</h3>
+                  <p style={{ fontSize: '13px', margin: '4px 0 0 0', color: 'var(--text-muted)' }}>İnternete anında bağlanın</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <div style={{ flex: 1, background: 'var(--bg-color)', padding: '12px', borderRadius: '10px', border: '1px dashed var(--glass-border)' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}><i className="fa-solid fa-network-wired"></i> Ağ Adı</div>
+                  <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', wordBreak: 'break-all' }}>{data.settings.wifi.name}</div>
+                </div>
+                {data.settings.wifi.password && (
+                  <div style={{ flex: 1, background: 'var(--bg-color)', padding: '12px', borderRadius: '10px', border: '1px dashed var(--glass-border)' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}><i className="fa-solid fa-key"></i> Şifre</div>
+                    <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', wordBreak: 'break-all' }}>{data.settings.wifi.password}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* SOSYAL AĞLARIMIZ */}
         <div style={{ marginTop: '30px', marginBottom: '24px' }}>
@@ -687,7 +893,7 @@ export default function Home() {
 
           <a href={settings?.socialLinks?.instagram || '#'} className="social-link-item" style={{ borderRadius: '16px 16px 0 0', textDecoration: 'none', color: 'inherit', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)', padding: '16px', border: '1px solid var(--glass-border)' }}>
             <div className="social-link-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div className="social-icon instagram" style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' }}>
+              <div className="social-icon instagram" style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)', background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' }}>
                 <i className="fa-brands fa-instagram" style={{ fontSize: '24px' }}></i>
               </div>
               <div className="social-info">
@@ -700,7 +906,7 @@ export default function Home() {
 
           <a href={settings?.socialLinks?.whatsapp ? `https://wa.me/${settings.socialLinks.whatsapp.replace(/[^0-9]/g, '')}` : '#'} className="social-link-item" style={{ borderTop: 'none', borderBottom: 'none', textDecoration: 'none', color: 'inherit', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)', padding: '16px', borderLeft: '1px solid var(--glass-border)', borderRight: '1px solid var(--glass-border)' }}>
             <div className="social-link-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div className="social-icon whatsapp" style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', background: '#25d366' }}>
+              <div className="social-icon whatsapp" style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)', background: '#25d366' }}>
                 <i className="fa-brands fa-whatsapp" style={{ fontSize: '24px' }}></i>
               </div>
               <div className="social-info">
@@ -713,7 +919,7 @@ export default function Home() {
 
           <a href={settings?.socialLinks?.googleReview || '#'} className="social-link-item" style={{ borderRadius: '0 0 16px 16px', textDecoration: 'none', color: 'inherit', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-color)', padding: '16px', border: '1px solid var(--glass-border)' }}>
             <div className="social-link-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div className="social-icon google" style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', background: '#ea4335' }}>
+              <div className="social-icon google" style={{ width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)', background: '#ea4335' }}>
                 <i className="fa-brands fa-google" style={{ fontSize: '24px' }}></i>
               </div>
               <div className="social-info">
@@ -732,32 +938,32 @@ export default function Home() {
           </div>
           
           <div className="contact-row" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 0', borderBottom: '1px solid var(--glass-border)' }}>
-            <div className="contact-icon-box" style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa' }}>
+            <div className="contact-icon-box" style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-alpha-05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
               <i className="fa-solid fa-phone"></i>
             </div>
             <div className="contact-info-text" style={{ display: 'flex', flexDirection: 'column' }}>
               <div className="contact-label" style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Telefon</div>
-              <a href="tel:05442285208" className="contact-value" style={{ fontSize: '15px', fontWeight: 600, color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color='var(--primary-color)'} onMouseOut={(e) => e.target.style.color='inherit'}>0544 228 52 08</a>
+              <a href="tel:05325244906" className="contact-value" style={{ fontSize: '15px', fontWeight: 600, color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color='var(--primary-color)'} onMouseOut={(e) => e.target.style.color='inherit'}>0532 524 49 06</a>
             </div>
           </div>
 
           <div className="contact-row" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 0', borderBottom: '1px solid var(--glass-border)' }}>
-            <div className="contact-icon-box" style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa' }}>
+            <div className="contact-icon-box" style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-alpha-05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
               <i className="fa-solid fa-mobile-screen"></i>
             </div>
             <div className="contact-info-text" style={{ display: 'flex', flexDirection: 'column' }}>
               <div className="contact-label" style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>WhatsApp</div>
-              <a href={"https://wa.me/" + (settings?.socialLinks?.whatsapp?.replace(/[^0-9]/g, '') || "905011610399")} target="_blank" rel="noreferrer" className="contact-value" style={{ fontSize: '15px', fontWeight: 600, color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color='#25D366'} onMouseOut={(e) => e.target.style.color='inherit'}>0501 161 03 99</a>
+              <a href={"https://wa.me/" + (settings?.socialLinks?.whatsapp?.replace(/[^0-9]/g, '') || "905325244906")} target="_blank" rel="noreferrer" className="contact-value" style={{ fontSize: '15px', fontWeight: 600, color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color='#25D366'} onMouseOut={(e) => e.target.style.color='inherit'}>0532 524 49 06</a>
             </div>
           </div>
 
           <div className="contact-row" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 0', borderBottom: '1px solid var(--glass-border)', marginBottom: '24px' }}>
-            <div className="contact-icon-box" style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa' }}>
+            <div className="contact-icon-box" style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-alpha-05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
               <i className="fa-regular fa-envelope"></i>
             </div>
             <div className="contact-info-text" style={{ display: 'flex', flexDirection: 'column' }}>
               <div className="contact-label" style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>E-posta</div>
-              <a href="mailto:ortakoykumrucusu.burhaniye@gmail.com" className="contact-value" style={{ fontSize: '15px', fontWeight: 600, color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color='var(--primary-color)'} onMouseOut={(e) => e.target.style.color='inherit'}>ortakoykumrucusu.burhaniye@gmail.com</a>
+              <a href="mailto:info@catiocakbasi.com" className="contact-value" style={{ fontSize: '15px', fontWeight: 600, color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.target.style.color='var(--primary-color)'} onMouseOut={(e) => e.target.style.color='inherit'}>info@catiocakbasi.com</a>
             </div>
           </div>
 
@@ -805,7 +1011,7 @@ export default function Home() {
           {/* MAP */}
           <div className="map-container" style={{ marginTop: '24px', borderRadius: '12px', overflow: 'hidden', height: '250px', position: 'relative' }}>
             <iframe 
-              src="https://maps.google.com/maps?q=Öğretmenler,+Muammer+Aksoy+Cd.+No:34,+10700+Burhaniye/Balıkesir&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+              src="https://maps.google.com/maps?q=Cumhuriyet,+Tayyareci+Fehmi+Sok.+No:25/1,+34360+Şişli/İstanbul&t=&z=16&ie=UTF8&iwloc=&output=embed" 
               style={{ width: '100%', height: '100%', border: 0, pointerEvents: 'auto' }}
               allowFullScreen="" 
               loading="lazy" 
@@ -815,7 +1021,7 @@ export default function Home() {
 
           {/* MAP LINKS */}
           <div className="map-links" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px', padding: '0 10px' }}>
-            <a href="https://www.google.com/maps/dir/?api=1&destination=Öğretmenler,+Muammer+Aksoy+Cd.+No:34,+10700+Burhaniye/Balıkesir" target="_blank" rel="noreferrer" className="map-link-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'var(--text-main)', transition: 'transform 0.2s' }}>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=Cumhuriyet,+Tayyareci+Fehmi+Sok.+No:25/1,+34360+Şişli/İstanbul" target="_blank" rel="noreferrer" className="map-link-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'var(--text-main)', transition: 'transform 0.2s' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M8 5L2 8V21L8 18V5Z" fill="#4285F4"/>
                 <path d="M16 8L8 5V18L16 21V8Z" fill="#2B60B8"/>
@@ -826,7 +1032,7 @@ export default function Home() {
               <span style={{ fontSize: '13px', fontWeight: 700 }}>Google Maps</span>
             </a>
             
-            <a href="https://yandex.com.tr/harita/?text=Öğretmenler,+Muammer+Aksoy+Cd.+No:34,+10700+Burhaniye/Balıkesir" target="_blank" rel="noreferrer" className="map-link-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'var(--text-main)', transition: 'transform 0.2s' }}>
+            <a href="https://yandex.com.tr/harita/?text=Cumhuriyet,+Tayyareci+Fehmi+Sok.+No:25/1,+34360+Şişli/İstanbul" target="_blank" rel="noreferrer" className="map-link-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'var(--text-main)', transition: 'transform 0.2s' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="10" r="7" fill="#FF0000" />
                 <rect x="10.5" y="15" width="3" height="7" rx="1.5" fill="#FF0000" />
@@ -835,7 +1041,7 @@ export default function Home() {
               <span style={{ fontSize: '13px', fontWeight: 700 }}>Yandex Maps</span>
             </a>
             
-            <a href="http://maps.apple.com/?daddr=Öğretmenler,+Muammer+Aksoy+Cd.+No:34,+10700+Burhaniye/Balıkesir&dirflg=d" target="_blank" rel="noreferrer" className="map-link-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'var(--text-main)', transition: 'transform 0.2s' }}>
+            <a href="http://maps.apple.com/?daddr=Cumhuriyet,+Tayyareci+Fehmi+Sok.+No:25/1,+34360+Şişli/İstanbul&dirflg=d" target="_blank" rel="noreferrer" className="map-link-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'var(--text-main)', transition: 'transform 0.2s' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M21.5 2.5L2 10.5L10 14L13.5 22L21.5 2.5Z" fill="#007AFF"/>
               </svg>
@@ -867,14 +1073,48 @@ export default function Home() {
 
       <div className="bottom-spacer" style={{ height: '100px' }}></div>
 
-      {/* FLOATING CART BTN */}
-      {cart.length > 0 && !isCartOpen && (
-        <div className="floating-cart-btn visible" onClick={() => setIsCartOpen(true)}>
-          <div className="cart-count">{cart.length}</div>
-          <div className="cart-text">Siparişi Gör</div>
-          <div className="cart-price">• {finalTotal} ₺</div>
+      {/* FLOATING CART BTN REMOVED IN FAVOR OF BOTTOM NAV */}
+
+      {/* FAVORITES OVERLAY */}
+      <div className={`checkout-overlay ${isFavoritesOpen ? 'active' : ''}`} onClick={(e) => {if(e.target.className.includes('checkout-overlay')) setIsFavoritesOpen(false)}}>
+        <div className="checkout-sheet single-page-compact">
+          <div className="sheet-header compact-header" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <h2 className="sheet-title" style={{ fontSize: '18px', margin: 0, textAlign: 'center' }}>
+              <i className="fa-solid fa-heart" style={{ marginRight: '8px', color: '#ef4444' }}></i> Favorilerim
+            </h2>
+            <i className="fa-solid fa-xmark close-sheet" onClick={() => setIsFavoritesOpen(false)} style={{ cursor: 'pointer', position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '20px' }}></i>
+          </div>
+          
+          <div className="sheet-body compact-body" style={{ padding: '16px' }}>
+            {favorites.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                <i className="fa-regular fa-heart" style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}></i>
+                <p>Henüz favori ürününüz yok.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {favorites.map(item => (
+                  <div key={item.id} className="list-item" onClick={() => { setSelectedItem(item); setIsDetailOpen(true); setIsFavoritesOpen(false); }} style={{ cursor: 'pointer', background: 'var(--surface-color)', borderRadius: '16px', padding: '12px', display: 'flex', gap: '12px', alignItems: 'center', border: '1px solid var(--glass-border)' }}>
+                    <div className="list-item-thumb" style={{ width: '64px', height: '64px', position: 'relative', borderRadius: '12px', overflow: 'hidden', flexShrink: 0 }}>
+                      <Image src={item.image} alt={item.title} fill style={{ objectFit: 'cover' }} sizes="64px" />
+                    </div>
+                    <div className="list-item-content" style={{ flex: 1 }}>
+                      <div className="list-item-title" style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-main)', marginBottom: '4px' }}>{item.title}</div>
+                      <div className="list-item-price" style={{ fontSize: '14px', color: 'var(--primary-color)', fontWeight: '700' }}>{item.price} ₺</div>
+                    </div>
+                    <button onClick={(e) => { e.stopPropagation(); toggleFavorite(item); }} style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                      <i className="fa-solid fa-heart"></i>
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); addToCart(item); }} style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary-color)', border: 'none', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                      <i className="fa-solid fa-plus"></i>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
 
       {/* MULTI-STEP CHECKOUT OVERLAY */}
       <div className={`checkout-overlay ${isCartOpen ? 'active' : ''}`} onClick={(e) => {if(e.target.className.includes('checkout-overlay')) setIsCartOpen(false)}}>
@@ -909,7 +1149,7 @@ export default function Home() {
                     : 'Malzemeleri Düzenle';
                   
                   return (
-                  <div key={item.cartId} className="cart-item" style={{ flexDirection: 'column', alignItems: 'flex-start', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div key={item.cartId} className="cart-item" style={{ flexDirection: 'column', alignItems: 'flex-start', padding: '12px 0', borderBottom: '1px solid var(--bg-alpha-05)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                       <div className="cart-item-info" style={{ fontWeight: 600 }}>
                         <span style={{ color: 'var(--primary-color)', marginRight: '6px' }}>1x</span> 
@@ -923,12 +1163,12 @@ export default function Home() {
                         )}
                         <div className="cart-item-price" style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>
                           {item.price} ₺ 
-                          <i className="fa-solid fa-xmark remove-item" onClick={() => removeFromCart(item.cartId)} style={{ cursor: 'pointer', marginLeft: '10px', color: 'rgba(255,255,255,0.5)' }}></i>
+                          <i className="fa-solid fa-xmark remove-item" onClick={() => removeFromCart(item.cartId)} style={{ cursor: 'pointer', marginLeft: '10px', color: 'var(--text-alpha-50)' }}></i>
                         </div>
                       </div>
                     </div>
                     {item.excludedIngredients.length > 0 && (
-                      <div className="cart-item-notes" style={{ width: '100%', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', marginTop: '4px' }}>
+                      <div className="cart-item-notes" style={{ width: '100%', fontSize: '11px', color: 'var(--text-alpha-40)', fontStyle: 'italic', marginTop: '4px' }}>
                         İstemiyor: {item.excludedIngredients.join(', ')}
                       </div>
                     )}
@@ -943,15 +1183,15 @@ export default function Home() {
                 
                 {cart.length === 0 && (
                   <div className="cart-empty-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px 0' }}>
-                    <i className="fa-solid fa-basket-shopping" style={{ fontSize: '2.5rem', color: 'rgba(255,255,255,0.2)', marginBottom: '10px' }}></i>
-                    <p style={{ fontSize: '14px', margin: 0, color: 'rgba(255,255,255,0.5)' }}>Sepetiniz boş.</p>
+                    <i className="fa-solid fa-basket-shopping" style={{ fontSize: '2.5rem', color: 'var(--bg-alpha-20)', marginBottom: '10px' }}></i>
+                    <p style={{ fontSize: '14px', margin: 0, color: 'var(--text-alpha-50)' }}>Sepetiniz boş.</p>
                   </div>
                 )}
               </div>
               
               {cart.length > 0 && (
                 <>
-                  <div className="cart-total-row compact-total" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', padding: '16px 0', borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
+                  <div className="cart-total-row compact-total" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', padding: '16px 0', borderTop: '1px dashed var(--bg-alpha-10)' }}>
                     <strong>Ara Toplam</strong>
                     <strong>{cartTotal} ₺</strong>
                   </div>
@@ -961,7 +1201,14 @@ export default function Home() {
                     {cartTotal < threshold && <span style={{ fontSize: '13px', color: '#999', fontStyle: 'italic', fontWeight: '500' }}>Ortalama kurye ücretimiz: {courierFee} ₺'dir.</span>}
                   </div>
 
-                  <button className="btn-checkout-premium compact-btn" onClick={() => setCheckoutStep(2)} style={{ width: '100%', padding: '14px', borderRadius: '8px', background: 'var(--primary-color)', color: '#000', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+                  <button className="btn-checkout-premium compact-btn" onClick={() => {
+                    const minAmount = data.settings?.minOrderAmount || 200;
+                    if (cartTotal < minAmount) {
+                      setShowMinCartAlert(true);
+                      return;
+                    }
+                    setCheckoutStep(2);
+                  }} style={{ width: '100%', padding: '14px', borderRadius: '8px', background: 'var(--primary-color)', color: '#000', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
                     Devam Et <i className="fa-solid fa-arrow-right"></i>
                   </button>
                 </>
@@ -972,13 +1219,14 @@ export default function Home() {
             <div style={{ display: checkoutStep === 2 ? 'block' : 'none' }}>
               <style dangerouslySetInnerHTML={{ __html: `
                 .premium-input {
-                  width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #fff; font-family: 'Outfit', sans-serif; font-size: 14px; outline: none; transition: all 0.3s;
+                  width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--bg-alpha-10); background: var(--bg-alpha-03); color: var(--text-main); font-family: 'Outfit', sans-serif; font-size: 14px; outline: none; transition: all 0.3s;
                 }
+                .premium-input::placeholder { color: var(--text-muted); }
                 .premium-input:focus {
-                  border-color: var(--primary-color); background: rgba(0,0,0,0.5); box-shadow: 0 0 0 4px rgba(212,175,55,0.1);
+                  border-color: var(--primary-color); background: var(--glass-input-focus); box-shadow: 0 0 0 4px rgba(212,175,55,0.1);
                 }
                 .premium-payment-btn {
-                  flex: 1; padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: #aaa; cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 12px; font-weight: 600; transition: all 0.3s; text-align: left;
+                  flex: 1; padding: 16px; border-radius: 12px; border: 1px solid var(--bg-alpha-10); background: var(--bg-alpha-03); color: var(--text-muted); cursor: pointer; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 12px; font-weight: 600; transition: all 0.3s; text-align: left;
                 }
                 .premium-payment-btn.active {
                   border-color: var(--primary-color); background: rgba(212,175,55,0.05); color: var(--primary-color); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(212,175,55,0.1);
@@ -1003,7 +1251,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '12px', color: 'rgba(255,255,255,0.5)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Ödeme Yöntemi</div>
+              <div style={{ marginBottom: '12px', color: 'var(--text-alpha-50)', fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Ödeme Yöntemi</div>
               <div className="payment-methods compact-payment" style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
                 <button className={`premium-payment-btn ${customerInfo.paymentMethod === 'nakit' ? 'active' : ''}`} onClick={() => setCustomerInfo({...customerInfo, paymentMethod: 'nakit'})}>
                   <i className="fa-solid fa-money-bill-wave" style={{ color: '#2ecc71', fontSize: '22px' }}></i>
@@ -1025,7 +1273,7 @@ export default function Home() {
                     placeholder="KUPON KODU GİRİN" 
                     value={couponCode}
                     onChange={e => setCouponCode(e.target.value)}
-                    style={{ width: '100%', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 600, paddingLeft: '44px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+                    style={{ width: '100%', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 600, paddingLeft: '44px', background: 'var(--bg-alpha-05)', border: '1px solid var(--bg-alpha-10)' }}
                   />
                 </div>
                 <button className="btn-apply-coupon" onClick={handleApplyCoupon} style={{ padding: '0 24px', borderRadius: '12px', border: '1px solid var(--primary-color)', background: 'linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.2))', color: 'var(--primary-color)', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s' }}>
@@ -1040,8 +1288,8 @@ export default function Home() {
                 </div>
               )}
               
-              <div className="cart-total-row compact-total" style={{ display: 'flex', justifyContent: 'space-between', margin: '20px 0', borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '20px', alignItems: 'center' }}>
-                <span style={{ fontSize: '16px', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Genel Toplam</span>
+              <div className="cart-total-row compact-total" style={{ display: 'flex', justifyContent: 'space-between', margin: '20px 0', borderTop: '1px dashed var(--bg-alpha-10)', paddingTop: '20px', alignItems: 'center' }}>
+                <span style={{ fontSize: '16px', color: 'var(--text-alpha-70)', fontWeight: 600 }}>Genel Toplam</span>
                 <strong style={{ color: 'var(--primary-color)', fontSize: '28px', textShadow: '0 2px 10px rgba(212,175,55,0.3)' }}>{finalTotal} ₺</strong>
               </div>
               
@@ -1075,18 +1323,18 @@ export default function Home() {
       </div>
 
       {/* EDIT INGREDIENTS MODAL */}
-      <div className={`edit-item-overlay ${isEditOpen ? 'active' : ''}`} style={{ opacity: isEditOpen ? 1 : 0, pointerEvents: isEditOpen ? 'auto' : 'none', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.3s ease' }}>
+      <div className={`edit-item-overlay ${isEditOpen ? 'active' : ''}`} style={{ opacity: isEditOpen ? 1 : 0, pointerEvents: isEditOpen ? 'auto' : 'none', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 10010, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'opacity 0.3s ease' }}>
         <div className="edit-item-sheet" style={{ background: 'var(--surface-color)', padding: '20px', borderRadius: '16px', width: '90%', maxWidth: '350px', border: '1px solid var(--glass-border)' }}>
           <div className="edit-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '18px' }}>
               {cart[editingCartIndex]?.title?.toLowerCase().includes('meşrubat') ? 'Meşrubat Seçimi' : 'Ürün Malzemeleri'}
             </h4>
-            <i className="fa-solid fa-xmark close-edit" onClick={() => setIsEditOpen(false)} style={{ cursor: 'pointer', fontSize: '20px', color: 'rgba(255,255,255,0.5)' }}></i>
+            <i className="fa-solid fa-xmark close-edit" onClick={() => setIsEditOpen(false)} style={{ cursor: 'pointer', fontSize: '20px', color: 'var(--text-alpha-50)' }}></i>
           </div>
           <div className="edit-body" style={{ marginBottom: '20px' }}>
             {cart[editingCartIndex]?.title?.toLowerCase().includes('meşrubat') ? (
               ['Kola', 'Fanta', 'Sprite', 'Ice Tea Limon', 'Ice Tea Şeftali'].map(drink => (
-                <div key={drink} className="ingredient-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div key={drink} className="ingredient-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--bg-alpha-05)' }}>
                   <span className="ingredient-name">{drink}</span>
                   <input 
                     type="radio" 
@@ -1103,7 +1351,7 @@ export default function Home() {
               ))
             ) : (
               getCustomizableIngredients(cart[editingCartIndex]).map(ing => (
-                <div key={ing} className="ingredient-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div key={ing} className="ingredient-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--bg-alpha-05)' }}>
                   <span className="ingredient-name">{ing}</span>
                   <label className="switch" style={{ position: 'relative', display: 'inline-block', width: '40px', height: '20px' }}>
                     <input 
@@ -1145,7 +1393,7 @@ export default function Home() {
           <p style={{ marginBottom: 20 }}>Sipariş Numaranız: <strong>{trackingOrder?.id}</strong></p>
 
           {trackingOrder && trackingOrder.items && (
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: 16, marginBottom: 24, textAlign: 'left', fontSize: 14 }}>
+            <div style={{ background: 'var(--bg-alpha-03)', border: '1px solid var(--bg-alpha-10)', borderRadius: 12, padding: 16, marginBottom: 24, textAlign: 'left', fontSize: 14 }}>
               <div style={{ fontWeight: 700, color: 'var(--primary-color)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <i className="fa-solid fa-receipt"></i> Sipariş Özeti
               </div>
@@ -1161,7 +1409,7 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 12, marginBottom: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--bg-alpha-10)', paddingTop: 12, marginBottom: 8 }}>
                 <span style={{ color: 'var(--text-muted)' }}>Ödeme Yöntemi:</span>
                 <span style={{ fontWeight: 600 }}>
                   {trackingOrder.customerInfo?.paymentMethod === 'nakit' ? 'Kapıda Nakit' : 
@@ -1186,11 +1434,11 @@ export default function Home() {
             <div style={{ background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', borderRadius: 12, padding: 24, textAlign: 'center', marginBottom: 24 }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>😔</div>
               <h4 style={{ color: '#e74c3c', fontSize: 18, marginBottom: 8, fontWeight: 700 }}>Siparişiniz İptal Edildi</h4>
-              <p style={{ color: '#eee', fontSize: 14, marginBottom: 16, lineHeight: 1.5 }}>Çok özür dileriz ama maalesef siparişiniz iptal oldu.</p>
+              <p style={{ color: 'var(--text-main)', fontSize: 14, marginBottom: 16, lineHeight: 1.5 }}>Çok özür dileriz ama maalesef siparişiniz iptal oldu.</p>
               {trackingOrder.statusHistory?.find(h => h.status === 'cancelled')?.note && (
-                <div style={{ background: 'rgba(0,0,0,0.2)', padding: 12, borderRadius: 8, textAlign: 'left', borderLeft: '3px solid #e74c3c' }}>
+                <div style={{ background: 'var(--bg-alpha-06)', padding: 12, borderRadius: 8, textAlign: 'left', borderLeft: '3px solid #e74c3c' }}>
                   <div style={{ color: '#e74c3c', fontSize: 12, fontWeight: 600, marginBottom: 4 }}>İptal Notu:</div>
-                  <div style={{ color: '#ddd', fontSize: 13, fontStyle: 'italic' }}>{trackingOrder.statusHistory.find(h => h.status === 'cancelled').note}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontStyle: 'italic' }}>{trackingOrder.statusHistory.find(h => h.status === 'cancelled').note}</div>
                 </div>
               )}
             </div>
@@ -1267,7 +1515,7 @@ export default function Home() {
 
       {/* STORE CLOSED OVERLAY */}
       {!isStoreOpen && (
-        <div className="store-closed-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', padding: '20px', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
+        <div className="store-closed-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)', padding: '20px', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
           <i className="fa-solid fa-store-slash" style={{ fontSize: 64, color: 'var(--primary-color)', marginBottom: 20 }}></i>
           <h2 style={{ fontSize: 28, marginBottom: 10 }}>Şu An Kapalıyız</h2>
           <p style={{ color: '#ccc', maxWidth: 450, lineHeight: 1.6, fontSize: '15px' }}>
@@ -1290,41 +1538,266 @@ export default function Home() {
       )}
 
       {/* PREMIUM TOAST */}
-      <div className={`premium-toast ${toast ? 'show' : ''}`}>
+      <div className={`premium-toast ${toast ? 'show' : ''} ${toast?.type === 'error' ? 'error' : ''}`}>
         {toast && (
           <>
             <i className="fa-solid fa-xmark toast-close" onClick={() => setToast(null)}></i>
-            <div className="toast-header">
-              <i className="fa-solid fa-bell" style={{ animation: 'ring 2s infinite', color: 'var(--primary-color)' }}></i>
-              Bunu denemiş miydiniz?
+            {toast.type === 'error' ? (
+              <div className="toast-content" style={{ padding: '20px 24px', color: '#ef4444', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 12 }}>
+                 <i className="fa-solid fa-circle-exclamation" style={{ fontSize: 24 }}></i>
+                 {toast.msg}
+              </div>
+            ) : (
+              <>
+                <div className="toast-header">
+                  <i className={`fa-solid ${toast.type === 'cross-sell' ? 'fa-bell' : 'fa-check-circle'}`} style={{ animation: toast.type === 'cross-sell' ? 'ring 2s infinite' : 'none', color: 'var(--primary-color)' }}></i>
+                  {toast.header}
+                </div>
+                
+                <div className="toast-body">
+                  {toast.image ? (
+                    <div className="toast-img">
+                      <Image src={toast.image} alt={toast.title} fill style={{ objectFit: 'cover' }} sizes="70px" />
+                    </div>
+                  ) : (
+                    <div className="toast-img-placeholder"><i className="fa-solid fa-utensils"></i></div>
+                  )}
+                  
+                  <div className="toast-content">
+                    <div className="toast-item-title">{toast.title}</div>
+                    <div className="toast-msg">"{toast.msg}"</div>
+                    <div className="toast-footer">
+                      {toast.price && <span className="toast-price">{toast.price} ₺</span>}
+                      {toast.action && (
+                        <button className="btn-toast-add" onClick={(e) => {
+                          e.stopPropagation();
+                          toast.action();
+                          setToast(null);
+                        }}>
+                          {toast.actionText}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* FLOATING BOTTOM NAV */}
+      <div className="floating-bottom-nav" style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'var(--glass-bg)', backdropFilter: 'blur(24px) saturate(200%)', WebkitBackdropFilter: 'blur(24px) saturate(200%)', borderRadius: '40px', padding: '12px 24px', display: 'flex', gap: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)' }}>
+        <button onClick={() => { setActiveNav('home'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{ background: activeNav === 'home' ? 'var(--primary-color)' : 'transparent', border: 'none', color: activeNav === 'home' ? '#000' : 'var(--text-muted)', fontSize: '20px', cursor: 'pointer', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }}>
+          <i className="fa-solid fa-house"></i>
+        </button>
+        <button onClick={() => { setIsWaiterOpen(true); }} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }}>
+          <i className="fa-solid fa-bell-concierge"></i>
+        </button>
+        <button onClick={() => { setIsFavoritesOpen(true); }} style={{ background: activeNav === 'favorites' ? 'var(--primary-color)' : 'transparent', border: 'none', color: activeNav === 'favorites' ? '#000' : 'var(--text-muted)', fontSize: '20px', cursor: 'pointer', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }}>
+          <i className="fa-solid fa-heart"></i>
+        </button>
+        <button onClick={() => { setIsCartOpen(true); }} style={{ position: 'relative', background: activeNav === 'cart' ? 'var(--primary-color)' : 'transparent', border: 'none', color: activeNav === 'cart' ? '#000' : 'var(--text-muted)', fontSize: '20px', cursor: 'pointer', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }}>
+          <i className="fa-solid fa-cart-shopping"></i>
+          {cart.length > 0 && <span style={{ position: 'absolute', top: -2, right: -2, background: '#ef4444', color: '#fff', fontSize: '11px', width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', border: '2px solid var(--bg-color)' }}>{cart.length}</span>}
+        </button>
+      </div>
+
+      {/* WAITER MODAL - PREMIUM */}
+      <div className={`checkout-overlay ${isWaiterOpen ? 'active' : ''}`} onClick={(e) => { if(e.target.className.includes('checkout-overlay')) setIsWaiterOpen(false); }}>
+        <div className={`checkout-sheet ${isWaiterOpen ? 'open' : ''}`} style={{ background: 'var(--surface-color)', height: 'auto', maxHeight: '90vh', minHeight: '30vh', borderRadius: '32px 32px 0 0', display: 'flex', flexDirection: 'column', padding: '24px 20px', boxShadow: '0 -20px 40px rgba(0,0,0,0.5)', borderTop: '1px solid var(--glass-border)', backgroundImage: 'linear-gradient(to bottom, rgba(255,255,255,0.05), transparent)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary-color), #f39c12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', boxShadow: '0 4px 15px rgba(243, 156, 18, 0.4)' }}>
+                <i className="fa-solid fa-bell-concierge" style={{ fontSize: '18px' }}></i>
+              </div>
+              Garson Çağır
+            </h2>
+            <button onClick={() => setIsWaiterOpen(false)} style={{ background: 'var(--bg-alpha-10)', border: 'none', color: 'var(--text-muted)', fontSize: '24px', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.3s' }}>&times;</button>
+          </div>
+          
+          <div style={{ flex: 1, animation: isWaiterOpen ? 'fadeInUp 0.5s ease forwards' : 'none', overflowY: 'auto' }}>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '14px', lineHeight: '1.4' }}>İsteğiniz veya siparişiniz için masanıza hemen bir arkadaşımızı yönlendiriyoruz. Lütfen masa numaranızı tuşlayın.</p>
+            
+            <div style={{ marginBottom: '16px', position: 'relative' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '11px', color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '700' }}>Masa Numaranız</label>
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type="text" 
+                  value={waiterTableNo} 
+                  onChange={(e) => setWaiterTableNo(e.target.value)}
+                  placeholder="" 
+                  readOnly
+                  style={{ width: '100%', background: 'var(--bg-alpha-10)', border: '2px solid', borderColor: waiterTableNo ? 'var(--primary-color)' : 'var(--glass-border)', color: 'var(--text-main)', padding: '16px', borderRadius: '16px', fontSize: '28px', fontWeight: '800', outline: 'none', transition: 'all 0.3s ease', textAlign: 'center', letterSpacing: '4px', boxShadow: waiterTableNo ? '0 0 20px rgba(243, 156, 18, 0.15) inset' : 'none' }}
+                />
+                {!waiterTableNo && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', color: 'var(--text-muted)', opacity: 0.5, fontSize: '14px', letterSpacing: 'normal', fontWeight: '500', width: '100%', textAlign: 'center' }}>Masa Numaranızı Tuşlayınız 👇</div>}
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                <button key={num} onClick={() => setWaiterTableNo(prev => prev + num)} style={{ background: 'var(--bg-alpha-05)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', fontSize: '24px', fontWeight: '700', padding: '12px', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>{num}</button>
+              ))}
+              <button onClick={() => setWaiterTableNo('')} style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', fontSize: '22px', fontWeight: '700', padding: '12px', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>C</button>
+              <button onClick={() => setWaiterTableNo(prev => prev + '0')} style={{ background: 'var(--bg-alpha-05)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', fontSize: '24px', fontWeight: '700', padding: '12px', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>0</button>
+              <button onClick={() => setWaiterTableNo(prev => prev.slice(0, -1))} style={{ background: 'var(--bg-alpha-10)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', fontSize: '22px', fontWeight: '700', padding: '12px', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}><i className="fa-solid fa-delete-left"></i></button>
             </div>
             
-            <div className="toast-body">
-              {toast.image ? (
-                <div className="toast-img">
-                  <Image src={toast.image} alt={toast.title} fill style={{ objectFit: 'cover' }} sizes="70px" />
+            <button 
+              onClick={handleCallWaiter}
+              disabled={waiterLoading || !waiterTableNo}
+              style={{ 
+                width: '100%', 
+                background: waiterTableNo ? 'linear-gradient(135deg, var(--primary-color), #f39c12)' : 'var(--bg-alpha-05)', 
+                color: waiterTableNo ? '#fff' : 'var(--text-muted)', 
+                textShadow: waiterTableNo ? '0 1px 3px rgba(0,0,0,0.5)' : 'none',
+                border: waiterTableNo ? '1px solid transparent' : '1px solid var(--glass-border)', 
+                padding: '20px', 
+                borderRadius: '20px', 
+                fontSize: '18px', 
+                fontWeight: '800', 
+                cursor: waiterLoading || !waiterTableNo ? 'not-allowed' : 'pointer', 
+                transition: 'all 0.3s', 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                gap: '12px',
+                boxShadow: waiterTableNo ? '0 10px 20px rgba(243, 156, 18, 0.3)' : '0 4px 6px rgba(0,0,0,0.1)',
+                transform: waiterLoading ? 'scale(0.98)' : 'scale(1)'
+              }}
+            >
+              {waiterLoading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-paper-plane" style={{ animation: waiterTableNo && !waiterLoading ? 'bounce 2s infinite' : 'none' }}></i>}
+              {waiterLoading ? 'Çağrılıyor...' : 'Garsonu Çağır'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* FUN WAITER SUCCESS POPUP */}
+      <div className={`checkout-overlay ${showWaiterSuccess ? 'active' : ''}`} style={{ zIndex: 10005, alignItems: 'center' }}>
+        <div style={{ background: 'var(--surface-color)', padding: '40px 32px', borderRadius: '32px', textAlign: 'center', maxWidth: '320px', width: '90%', border: '2px solid var(--primary-color)', boxShadow: '0 20px 50px rgba(0,0,0,0.8), 0 0 40px rgba(243,156,18,0.3) inset', transform: showWaiterSuccess ? 'scale(1) translateY(0)' : 'scale(0.8) translateY(20px)', opacity: showWaiterSuccess ? 1 : 0, transition: 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
+          <div style={{ fontSize: '72px', marginBottom: '20px', animation: 'bounce 2s infinite' }}>🏃‍♂️💨</div>
+          <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--primary-color)', marginBottom: '12px' }}>Hemen Geliyoruz!</h2>
+          <p style={{ color: 'var(--text-main)', fontSize: '15px', lineHeight: '1.6' }}>Garson arkadaşımız depara kalktı, masanıza doğru uçuyor! Lütfen kemerlerinizi bağlayın 🍽️✨</p>
+        </div>
+      </div>
+
+      {/* PRODUCT DETAILS MODAL (FULL SCREEN SHEET) */}
+      <div className={`checkout-overlay ${isDetailOpen ? 'active' : ''}`} onClick={(e) => { if(e.target.className.includes('checkout-overlay')) { setIsDetailOpen(false); setDetailQuantity(1); } }}>
+        <div className={`checkout-sheet ${isDetailOpen ? 'open' : ''}`} style={{ background: 'var(--bg-color)', minHeight: '60vh', maxHeight: '95vh', height: 'auto', borderRadius: '32px 32px 0 0', display: 'flex', flexDirection: 'column' }}>
+          {selectedItem && (
+            <>
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '20px 20px 0 20px' }}>
+                <button onClick={() => { setIsDetailOpen(false); setDetailQuantity(1); }} style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--surface-color)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)', cursor: 'pointer' }}>
+                  <i className="fa-solid fa-arrow-left"></i>
+                </button>
+                <div style={{ fontSize: '18px', fontWeight: '600' }}>Detaylar</div>
+                <button onClick={() => toggleFavorite(selectedItem)} style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--surface-color)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: favorites.some(f => f.id === selectedItem.id) ? '#ef4444' : 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.3s ease' }}>
+                  <i className={favorites.some(f => f.id === selectedItem.id) ? "fa-solid fa-heart" : "fa-regular fa-heart"}></i>
+                </button>
+              </div>
+
+              {/* Huge Image */}
+              <div style={{ position: 'relative', width: '90%', height: '180px', margin: '16px auto', borderRadius: '20px', overflow: 'hidden', flexShrink: 0, boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}>
+                <Image src={selectedItem.image} alt={selectedItem.title} fill style={{ objectFit: 'cover' }} sizes="400px" />
+              </div>
+
+              {/* Content */}
+              <div style={{ flex: 1, background: 'var(--surface-color)', borderRadius: '32px 32px 0 0', display: 'flex', flexDirection: 'column', boxShadow: '0 -10px 30px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                
+                <div style={{ flex: 1, padding: '20px 20px 16px 20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                  <div>
+                    <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px' }}>{selectedItem.emoji} {selectedItem.title}</h2>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}><i className="fa-solid fa-location-dot"></i> Ortaköy Kumrucusu, Osmanbey</div>
+                  </div>
+                  
+                  {/* Quantity Selector */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--bg-color)', padding: '8px 16px', borderRadius: '24px', border: '1px solid var(--glass-border)' }}>
+                    <button onClick={() => setDetailQuantity(Math.max(1, detailQuantity - 1))} style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '18px' }}>-</button>
+                    <span style={{ fontWeight: '600', width: '20px', textAlign: 'center' }}>{detailQuantity}</span>
+                    <button onClick={() => setDetailQuantity(detailQuantity + 1)} style={{ background: 'var(--primary-color)', border: 'none', color: '#fff', width: '28px', height: '28px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                  </div>
                 </div>
-              ) : (
-                <div className="toast-img-placeholder"><i className="fa-solid fa-utensils"></i></div>
-              )}
-              
-              <div className="toast-content">
-                <div className="toast-item-title">{toast.title}</div>
-                <div className="toast-msg">"{toast.msg}"</div>
-                <div className="toast-footer">
-                  <span className="toast-price">{toast.price} ₺</span>
-                  <button className="btn-toast-add" onClick={(e) => {
-                    e.stopPropagation();
-                    addToCart(toast.originalItem);
-                    setToast(null);
-                  }}>
-                    + Ekle
+
+                {/* Tags */}
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#22c55e', fontSize: '14px', fontWeight: '500' }}>
+                    <i className="fa-regular fa-face-smile"></i> Lezzetli
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#3b82f6', fontSize: '14px', fontWeight: '500' }}>
+                    <i className="fa-regular fa-clock"></i> 10-15 dk
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--primary-color)', fontSize: '14px', fontWeight: '500' }}>
+                    <i className="fa-solid fa-star"></i> 5.0 Puan
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div style={{ color: 'var(--text-muted)', lineHeight: '1.4', fontSize: '14px', marginBottom: '16px' }}>
+                  {selectedItem.description || "Gerçek Adana usulü acı ve baharat dengesiyle mangalda nar gibi kızarmış, damak çatlatan klasik lezzet."}
+                </div>
+
+                {/* Recommendation Section */}
+                {recommendation && (
+                  <div style={{ marginTop: '0px', padding: '12px 16px', borderRadius: '16px', background: 'var(--bg-color)', border: '1px solid var(--glass-border)' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--primary-color)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <i className="fa-solid fa-lightbulb"></i> {recommendation.phrase}
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '8px', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
+                        <Image src={recommendation.item.image} alt={recommendation.item.title} fill style={{ objectFit: 'cover' }} sizes="48px" />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-main)', marginBottom: '2px' }}>{recommendation.item.title}</div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{recommendation.item.price} ₺</div>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); addToCart(recommendation.item); setToast({type: 'success', header: 'Sepete Eklendi', title: recommendation.item.title, msg: 'Öneri sepete eklendi!', image: recommendation.item.image}); }} style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary-color)', color: '#000', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <i className="fa-solid fa-plus"></i>
+                      </button>
+                    </div>
+                  </div>
+                )}
+                </div>
+
+                {/* Bottom Add to Cart */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderTop: '1px solid var(--glass-border)', background: 'var(--surface-color)' }}>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Toplam Tutar</div>
+                    <div style={{ fontSize: '24px', fontWeight: '700' }}>{selectedItem.price * detailQuantity} ₺</div>
+                  </div>
+                  <button onClick={() => {
+                    for(let i=0; i<detailQuantity; i++) {
+                      addToCart(selectedItem);
+                    }
+                    setIsDetailOpen(false);
+                    setDetailQuantity(1);
+                  }} style={{ background: 'var(--primary-color)', color: '#000', padding: '12px 24px', borderRadius: '24px', fontSize: '15px', fontWeight: '600', border: 'none', cursor: 'pointer', boxShadow: '0 10px 20px rgba(0,0,0,0.1)' }}>
+                    Sepete Ekle
                   </button>
                 </div>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* MIN CART ALERT MODAL */}
+      <div className={`modal-overlay ${showMinCartAlert ? 'active' : ''}`} onClick={(e) => { if (e.target.className.includes('modal-overlay')) setShowMinCartAlert(false); }} style={{ zIndex: 10002 }}>
+        <div className={`modal-content ${showMinCartAlert ? 'open' : ''}`} style={{ maxWidth: '400px', textAlign: 'center', background: 'var(--surface-color)', borderRadius: '24px', padding: '32px 24px', border: '1px solid var(--glass-border)' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(212, 175, 55, 0.1)', color: 'var(--primary-color)', fontSize: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <i className="fa-solid fa-basket-shopping"></i>
+          </div>
+          <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '12px', color: 'var(--text-main)' }}>Minimum Sepet Tutarı</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '15px', lineHeight: '1.5', marginBottom: '24px' }}>
+            Sipariş verebilmek için sepet tutarınız en az <strong style={{ color: 'var(--primary-color)' }}>{data.settings?.minOrderAmount || 200} ₺</strong> olmalıdır.<br/><br/>
+            Şu anki tutar: <strong>{cartTotal} ₺</strong>
+          </p>
+          <button onClick={() => setShowMinCartAlert(false)} className="btn-primary" style={{ width: '100%', padding: '14px', borderRadius: '12px', fontSize: '15px', fontWeight: '600' }}>
+            Alışverişe Devam Et
+          </button>
+        </div>
       </div>
 
     </>
