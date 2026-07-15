@@ -2949,3 +2949,80 @@ body.light-mode .btn-apply-coupon {
 body.light-mode .cart-overlay {
   background: rgba(255, 255, 255, 0.8) !important;
 }
+
+
+/* ============================================================ */
+/* 1. CHECKOUT BORDER FIX (Müşteri Ekranı Bug Fix)              */
+/* ============================================================ */
+.checkout-overlay .form-group input, 
+.checkout-overlay .form-group textarea,
+.checkout-overlay .payment-method {
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+
+body.light-mode .checkout-overlay .form-group input, 
+body.light-mode .checkout-overlay .form-group textarea,
+body.light-mode .checkout-overlay .payment-method {
+  border: 1px solid rgba(0, 0, 0, 0.2) !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ============================================================ */
+/* 2. TOAST ANIMATION FIX (Müşteri Ekranı Bug Fix)              */
+/* ============================================================ */
+.premium-toast {
+  position: fixed;
+  bottom: -100px; /* start hidden below screen */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 400px;
+  background: var(--surface-color);
+  border: 1px solid var(--primary-color);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  border-radius: 16px;
+  z-index: 999999;
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  padding: 16px;
+  opacity: 0;
+  visibility: hidden;
+}
+.premium-toast.show {
+  bottom: 24px;
+  opacity: 1;
+  visibility: visible;
+}
+@media (max-width: 768px) {
+  .premium-toast.show {
+    bottom: 20px;
+  }
+}
+
+/* ============================================================ */
+/* 3. ADMIN PANEL GLASSMORPHISM                                 */
+/* ============================================================ */
+.glass-panel {
+  background: rgba(13, 13, 13, 0.7) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-item-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .admin-item-actions {
+    width: 100%;
+    margin-top: 12px;
+    justify-content: space-between;
+  }
+  .admin-item-actions button {
+    flex: 1;
+  }
+}

@@ -88,11 +88,15 @@ export default function AdminPage() {
   const [settings, setSettings] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [reminders, setReminders] = useState([]);
+  const [waiterRequests, setWaiterRequests] = useState([]);
+  const [notifPermission, setNotifPermission] = useState('default');
+  const [toastMsg, setToastMsg] = useState(null);
   const [activeReminders, setActiveReminders] = useState([]);
   const [orderCount, setOrderCount] = useState(0);
 
   // Order alarm
   const prevOrderCountRef = useRef(0);
+  const prevWaiterCountRef = useRef(0);
   const alarmAudioRef = useRef(null);
 
   // ---- AUTH ----
@@ -165,7 +169,16 @@ export default function AdminPage() {
     
     checkReminders();
     const interval = setInterval(checkReminders, 60000); // Check every minute
-    return () => clearInterval(interval);
+
+    const fetchWaiter = async () => {
+      try {
+        const reqs = await apiFetch('/api/waiter');
+        setWaiterRequests(reqs.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      } catch(e) {}
+    };
+    fetchWaiter();
+    const wInterval = setInterval(fetchWaiter, 10000);
+    return () => { clearInterval(interval); clearInterval(wInterval); };
   }, [authed, reminders]);
 
   async function dismissReminder(id) {
@@ -233,7 +246,13 @@ export default function AdminPage() {
     } catch {}
   }
 
+  function showToast(msg) {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 4000);
+  }
+
   function sendNotification(order) {
+    showToast('🔔 Yeni Sipariş: ' + (order.totalAmount ? formatPrice(order.totalAmount) : ''));
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('🔔 Yeni Sipariş!', { body: `Sipariş #${order.id?.slice(-6) || ''} - ${formatPrice(order.totalAmount || 0)}`, icon: '/images/logo.png' });
     }
@@ -241,10 +260,26 @@ export default function AdminPage() {
 
   // Request notification permission
   useEffect(() => {
-    if (authed && 'Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+    if (authed && 'Notification' in window) {
+      setNotifPermission(Notification.permission);
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(p => setNotifPermission(p));
+      }
     }
   }, [authed]);
+
+  useEffect(() => {
+    if (!authed) return;
+    const pendingWaiters = waiterRequests.filter(r => r.status === 'pending');
+    if (pendingWaiters.length > prevWaiterCountRef.current && prevWaiterCountRef.current > 0) {
+      playAlarm();
+      showToast('🔔 Yeni Garson Talebi!');
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('🔔 Yeni Garson Talebi!', { body: `Masa ${pendingWaiters[0]?.tableNo}`, icon: '/images/logo.png' });
+      }
+    }
+    prevWaiterCountRef.current = pendingWaiters.length;
+  }, [waiterRequests, authed]);
 
   // ---- LOGOUT ----
   function handleLogout() {
@@ -267,6 +302,7 @@ export default function AdminPage() {
     { id: 'menu', icon: 'fa-solid fa-utensils', label: '🍽️ Menü Yönetimi' },
     { id: 'coupons', icon: 'fa-solid fa-ticket', label: '🎟️ Kupon Kodları' },
     { id: 'orders', icon: 'fa-solid fa-box', label: '📦 Siparişler', badge: newOrders, activeBadge: activeOrders },
+    { id: 'waiter', icon: 'fa-solid fa-bell-concierge', label: '🤵 Garson Talepleri', badge: waiterRequests.filter(r => r.status === 'pending').length },
     { id: 'finance', icon: 'fa-solid fa-chart-line', label: '💰 Maliyet & Finans' },
     { id: 'settings', icon: 'fa-solid fa-store', label: '🏪 İşletme Ayarları' },
   ];
@@ -383,6 +419,7 @@ export default function AdminPage() {
           {activeTab === 'orders' && <OrdersTab orders={orders} reload={loadOrders} />}
           {activeTab === 'design' && <DesignTab settings={settings} reload={loadSettings} />}
             {activeTab === 'settings' && <SettingsTab settings={settings} reload={loadSettings} />}
+          {activeTab === 'waiter' && <WaiterTab requests={waiterRequests} setWaiterRequests={setWaiterRequests} />}
           {activeTab === 'finance' && <FinanceTab expenses={expenses} categories={categories} orders={orders} reloadExpenses={loadExpenses} reloadCategories={loadMenu} reminders={reminders} reloadReminders={loadReminders} />}
         </div>
       </main>
@@ -1292,6 +1329,7 @@ function FeaturedTab({ featured, reload }) {
   );
 }
 
+
 // ============================================================
 // MENU TAB
 // ============================================================
@@ -1351,39 +1389,45 @@ function MenuTab({ categories, reload }) {
         </button>
       </div>
 
-      {editing && (
-        <ItemForm item={editing === 'new' ? null : editing} onSave={handleSave} onCancel={() => setEditing(null)} showHighlight={true} />
+      {editing === 'new' && (
+        <ItemForm item={null} onSave={handleSave} onCancel={() => setEditing(null)} showHighlight={true} />
       )}
 
       <div style={{ display: 'grid', gap: 12 }}>
         {items.map((item, i) => (
-          <div key={item.id} className="admin-card" style={{ padding: 16, display: 'flex', gap: 16, alignItems: 'center', animation: `fadeIn 0.3s ease ${i * 0.04}s both`, flexWrap: 'wrap' }}>
-            {item.image && <img src={item.image} alt={item.title} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 10, border: `1px solid ${colors.border}`, flexShrink: 0 }} onError={e => { e.target.style.display = 'none'; }} />}
-            <div style={{ flex: 1, minWidth: 180 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                {item.emoji && <span>{item.emoji}</span>}
-                <span style={{ fontWeight: 600, fontSize: 15 }}>{item.title}</span>
-                {item.badge && <span className="admin-badge" style={{ background: 'rgba(212,175,55,0.15)', color: colors.gold, fontSize: 10 }}>{item.badge}</span>}
-                {item.isHighlight && <span className="admin-badge" style={{ background: 'rgba(243,156,18,0.15)', color: '#f39c12', fontSize: 10 }}>⭐ Öne Çıkan</span>}
-              </div>
-              <p style={{ margin: 0, fontSize: 12, color: colors.textMuted }}>{item.description?.slice(0, 80)}...</p>
-              <span style={{ fontSize: 14, fontWeight: 700, color: colors.gold }}>{formatPrice(item.price)}</span>
-            </div>
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-              <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setEditing(item)}>
-                <i className="fa-solid fa-pen"></i>
-              </button>
-              {deleting === item.id ? (
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handleDelete(item.id)}>Sil</button>
-                  <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(null)}>×</button>
+          <div key={item.id}>
+            {editing?.id === item.id ? (
+              <ItemForm item={item} onSave={handleSave} onCancel={() => setEditing(null)} showHighlight={true} />
+            ) : (
+              <div className="admin-card" style={{ padding: 16, display: 'flex', gap: 16, alignItems: 'center', animation: `fadeIn 0.3s ease ${i * 0.04}s both`, flexWrap: 'wrap' }}>
+                {item.image && <img src={item.image} alt={item.title} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 10, border: `1px solid ${colors.border}`, flexShrink: 0 }} onError={e => { e.target.style.display = 'none'; }} />}
+                <div style={{ flex: 1, minWidth: 180 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                    {item.emoji && <span>{item.emoji}</span>}
+                    <span style={{ fontWeight: 600, fontSize: 15 }}>{item.title}</span>
+                    {item.badge && <span className="admin-badge" style={{ background: 'rgba(212,175,55,0.15)', color: colors.gold, fontSize: 10 }}>{item.badge}</span>}
+                    {item.isHighlight && <span className="admin-badge" style={{ background: 'rgba(243,156,18,0.15)', color: '#f39c12', fontSize: 10 }}>⭐ Öne Çıkan</span>}
+                  </div>
+                  <p style={{ margin: 0, fontSize: 12, color: colors.textMuted }}>{item.description?.slice(0, 80)}...</p>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: colors.gold }}>{formatPrice(item.price)}</span>
                 </div>
-              ) : (
-                <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(item.id)} style={{ color: colors.danger }}>
-                  <i className="fa-solid fa-trash"></i>
-                </button>
-              )}
-            </div>
+                <div className="admin-item-actions" style={{ flexShrink: 0 }}>
+                  <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setEditing(item)}>
+                    <i className="fa-solid fa-pen"></i> Düzenle
+                  </button>
+                  {deleting === item.id ? (
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handleDelete(item.id)}>Sil</button>
+                      <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(null)}>×</button>
+                    </div>
+                  ) : (
+                    <button className="admin-btn admin-btn-ghost admin-btn-sm" onClick={() => setDeleting(item.id)} style={{ color: colors.danger }}>
+                      <i className="fa-solid fa-trash"></i>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         ))}
         {items.length === 0 && <p style={{ textAlign: 'center', color: colors.textMuted, padding: 40 }}>Bu kategoride ürün bulunamadı.</p>}
@@ -2137,6 +2181,77 @@ function DesignTab({ settings, reload }) {
             <button onClick={() => handleSelectBg('default')} className="admin-btn" style={{ background: '#ef4444', color: '#fff' }}>Kaldır</button>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// WAITER TAB
+// ============================================================
+function WaiterTab({ requests, setWaiterRequests }) {
+  const pendingRequests = requests.filter(r => r.status === 'pending');
+  const pastRequests = requests.filter(r => r.status !== 'pending').slice(0, 50);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <h2 style={{ margin: 0 }}>Garson Talepleri</h2>
+      </div>
+      
+      <div style={{ background: 'rgba(255,255,255,0.04)', padding: 20, borderRadius: 12, marginBottom: 24 }}>
+        <h3 style={{ marginTop: 0, marginBottom: 16, color: '#e8c94a' }}>Bekleyen Talepler</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+          {pendingRequests.map(req => (
+            <div key={req.id} style={{ background: 'rgba(255,255,255,0.05)', padding: 16, borderRadius: 12, borderLeft: '4px solid #f39c12' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <strong style={{ fontSize: 18 }}>Masa {req.tableNo}</strong>
+                <span style={{ fontSize: 12, color: '#999' }}>{formatDate(req.createdAt)}</span>
+              </div>
+              <div style={{ marginBottom: 16, color: '#ccc' }}>{req.reason}</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button 
+                  onClick={async () => {
+                    const res = await fetch('/api/waiter', { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ id: req.id, status: 'completed' }) });
+                    if(res.ok) setWaiterRequests(prev => prev.map(p => p.id === req.id ? {...p, status: 'completed', completedAt: new Date().toISOString()} : p));
+                  }}
+                  style={{ flex: 1, padding: '8px', background: 'rgba(39,174,96,0.2)', border: '1px solid #27ae60', color: '#27ae60', borderRadius: 8, cursor: 'pointer' }}
+                >
+                  Tamamlandı
+                </button>
+                <button 
+                  onClick={async () => {
+                    const res = await fetch('/api/waiter', { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ id: req.id, status: 'cancelled' }) });
+                    if(res.ok) setWaiterRequests(prev => prev.map(p => p.id === req.id ? {...p, status: 'cancelled', completedAt: new Date().toISOString()} : p));
+                  }}
+                  style={{ flex: 1, padding: '8px', background: 'rgba(231,76,60,0.2)', border: '1px solid #e74c3c', color: '#e74c3c', borderRadius: 8, cursor: 'pointer' }}
+                >
+                  İptal
+                </button>
+              </div>
+            </div>
+          ))}
+          {pendingRequests.length === 0 && (
+            <div style={{ color: '#999' }}>Bekleyen talep yok.</div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ background: 'rgba(255,255,255,0.04)', padding: 20, borderRadius: 12, opacity: 0.8 }}>
+        <h3 style={{ marginTop: 0, marginBottom: 16, color: '#999' }}>Geçmiş Talepler (Son 50)</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 12 }}>
+          {pastRequests.map(req => (
+            <div key={req.id} style={{ background: 'rgba(0,0,0,0.2)', padding: 12, borderRadius: 8, borderLeft: `3px solid ${req.status === 'completed' ? '#27ae60' : '#e74c3c'}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <strong>Masa {req.tableNo}</strong>
+                <span style={{ fontSize: 11, color: req.status === 'completed' ? '#27ae60' : '#e74c3c' }}>{req.status === 'completed' ? 'Tamamlandı' : 'İptal'}</span>
+              </div>
+              <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>{req.reason}</div>
+              <div style={{ fontSize: 11, color: '#666' }}>Açılış: {formatDate(req.createdAt)}</div>
+              <div style={{ fontSize: 11, color: '#666' }}>Kapanış: {formatDate(req.completedAt)}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
