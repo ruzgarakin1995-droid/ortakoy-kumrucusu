@@ -1591,8 +1591,9 @@ export default function Home() {
         <button onClick={() => { setActiveNav('home'); window.scrollTo({top: 0, behavior: 'smooth'}); }} style={{ background: activeNav === 'home' ? 'var(--primary-color)' : 'transparent', border: 'none', color: activeNav === 'home' ? '#000' : 'var(--text-muted)', fontSize: '20px', cursor: 'pointer', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }}>
           <i className="fa-solid fa-house"></i>
         </button>
-        <button onClick={() => { setIsWaiterOpen(true); }} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }}>
-          <i className="fa-solid fa-bell-concierge"></i>
+        <button onClick={() => { setIsWaiterOpen(true); }} style={{ position: 'relative', background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }}>
+          <div className="waiter-tooltip">Garson Çağır</div>
+            <i className="fa-solid fa-bell-concierge"></i>
         </button>
         <button onClick={() => { setIsFavoritesOpen(true); }} style={{ background: activeNav === 'favorites' ? 'var(--primary-color)' : 'transparent', border: 'none', color: activeNav === 'favorites' ? '#000' : 'var(--text-muted)', fontSize: '20px', cursor: 'pointer', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }}>
           <i className="fa-solid fa-heart"></i>
